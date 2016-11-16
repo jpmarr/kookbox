@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace kookbox.Interfaces
 {
-    public interface IPoll
+    public interface IMusicPlaylistSource
     {
-        IEnumerable<IMusicListener> VotesFor { get; }
-        IEnumerable<IMusicListener> VotesAgainst { get; }
+        string Name { get; }
+        IMusicTrack GetNextTrack();
     }
 }

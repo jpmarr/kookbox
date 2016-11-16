@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 
 namespace kookbox.Interfaces
 {
-    interface IMusicAlbum
+    public interface IMusicAlbum
     {
+        string Name { get; }
+        IMusicArtist Artist { get; }
+        IEnumerable<IMusicTrack> Tracks { get; }
     }
 }

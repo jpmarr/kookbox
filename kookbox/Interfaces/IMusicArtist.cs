@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 
 namespace kookbox.Interfaces
 {
-    interface IMusicArtist
+    public interface IMusicArtist
     {
+        string Name { get; }
     }
 }

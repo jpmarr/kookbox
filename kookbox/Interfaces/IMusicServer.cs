@@ -7,8 +7,13 @@ namespace kookbox.Interfaces
 {
     public interface IMusicServer
     {
-        IEnumerable<IMusicSource> Sources { get; }
-        IEnumerable<IMusicListener> Listeners { get; }
+        IMusicSources Sources { get; }
+        IEnumerable<IMusicListener> ConnectedListeners { get; }
         IEnumerable<IMusicRoom> Rooms { get; }
+
+        IMusicRoom CreateRoom(IMusicListener creator, string name);
+
+        IMusicListener ConnectListener(string username);
+        IEnumerable<IMusicListener> GetListeners(Paging paging);
     }
 }

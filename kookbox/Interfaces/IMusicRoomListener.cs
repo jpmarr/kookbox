@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 namespace kookbox.Interfaces
 {
-    public interface IMusicListener
+    public interface IMusicRoomListener
     {
-        string Name { get; }
+        IMusicListener Listener { get; }
         bool IsConnected { get; }
-        Option<IMusicRoom> ActiveRoom { get; }
+        IEnumerable<IMusicListenerRole> RoomRoles { get; }
+        Option<IPoll> Poll { get; }
         Option<IBan> Ban { get; }
-        IEnumerable<IMusicListenerRole> ServerRoles { get; }
     }
 }
