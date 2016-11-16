@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using Microsoft.VisualBasic.CompilerServices;
 
 namespace kookbox
 {
-    public class Option<T>
+    public struct Option<T> : IEquatable<Option<T>>
     {
-        private static readonly Option<T> none = new Option<T>();
+        private static readonly Option<T> SharedNone = new Option<T>();
+
+        private readonly T value;
 
         public static Option<T> Some(T value)
         {
@@ -18,20 +16,41 @@ namespace kookbox
 
         public static Option<T> None()
         {
-            return none;
+            return SharedNone;
         }
 
-        public T Value { get; }
         public bool HasValue { get; }
+
+        public T ValueOr(T alternative) => HasValue ? value : alternative;
 
         private Option(T value)
         {
-            Value = value;
+            this.value = value;
             HasValue = true;
         }
 
-        private Option()
+        public bool Equals(Option<T> other)
         {
+            if (HasValue != other.HasValue)
+                return false;
+            if (!HasValue && !other.HasValue)
+                return true;
+
+            return EqualityComparer<T>.Default.Equals(value, other.value);
+        }
+
+        public static bool operator ==(Option<T> left, Option<T> right) => left.Equals(right);
+        public static bool operator !=(Option<T> left, Option<T> right) => !left.Equals(right);
+
+        public override bool Equals(object obj) => obj is Option<T> && Equals((Option<T>)obj);
+
+        public override int GetHashCode()
+        {
+            if (HasValue)
+            {
+                return value.GetHashCode();
+            }
+            return 0;
         }
     }
 }
