@@ -10,6 +10,15 @@ namespace kookbox.core
         public INetworkTransports Transports { get; } = new NetworkTransports();
         public IEnumerable<IMusicListener> ConnectedListeners { get; }
         public IEnumerable<IMusicRoom> Rooms { get; }
+
+        public IMusicEventBus EventBus
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public IMusicRoom CreateRoom(IMusicListener creator, string name)
         {
             throw new NotImplementedException();

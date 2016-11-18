@@ -13,5 +13,6 @@ namespace kookbox.files
         }
 
         public string Name => "Files";
+        public IMusicPlayer Player { get; }
     }
 }

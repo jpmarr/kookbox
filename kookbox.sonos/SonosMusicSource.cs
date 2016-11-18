@@ -9,5 +9,6 @@ namespace kookbox.sonos
         }
 
         public string Name => "Sonos";
+        public IMusicPlayer Player { get; }
     }
 }
