@@ -1187,20 +1187,6 @@
         "runtime": {
           "lib/netstandard1.3/System.Xml.XDocument.dll": {}
         }
-      },
-      "kookbox.core/1.0.0": {
-        "type": "project",
-        "framework": ".NETStandard,Version=v1.6",
-        "dependencies": {
-          "NETStandard.Library": "1.6.0",
-          "System.Reactive": "3.1.0"
-        },
-        "compile": {
-          "netstandard1.6/kookbox.core.dll": {}
-        },
-        "runtime": {
-          "netstandard1.6/kookbox.core.dll": {}
-        }
       }
     }
   },
@@ -4471,17 +4457,12 @@
         "ref/xamarintvos10/_._",
         "ref/xamarinwatchos10/_._"
       ]
-    },
-    "kookbox.core/1.0.0": {
-      "type": "project",
-      "path": "../kookbox.core/project.json",
-      "msbuildProject": "../kookbox.core/kookbox.core.xproj"
     }
   },
   "projectFileDependencyGroups": {
     "": [
       "NETStandard.Library >= 1.6.0",
-      "kookbox.core >= 1.0.0-*"
+      "System.Reactive >= 3.1.0"
     ],
     ".NETStandard,Version=v1.6": []
   },
