@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
@@ -19,11 +20,11 @@ namespace kookbox.core.Interfaces
         IEnumerable<IQueuedMusicTrack> GetTrackHistory(int count);
         RoomState State { get; }
 
-        void Open();
-        void Close();
+        Task OpenAsync();
+        Task CloseAsync();
 
-        void Play();
-        void Pause();
+        Task PlayAsync();
+        Task PauseAsync();
     }
 
     public enum RoomState

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
@@ -6,5 +8,6 @@ namespace kookbox.core.Interfaces
     {
         IEnumerable<IMusicSource> Sources { get; }
         // operations that work across multiple sources like Search etc
+        Task<IObservable<IMusicSearchResults>> SearchAsync(string searchCriteria);
     }
 }

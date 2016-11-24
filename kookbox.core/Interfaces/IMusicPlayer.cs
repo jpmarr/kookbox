@@ -10,6 +10,8 @@ namespace kookbox.core.Interfaces
         void Seek(TimeSpan position);
 
         IMusicTrack CurrentTrack { get; }
+        TimeSpan CurrentPosition { get; }
+        bool IsPlaying { get; }
         bool CanSeek { get; }
 
         IObservable<PlayerEvent> Events { get; }
