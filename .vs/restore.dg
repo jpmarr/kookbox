@@ -1,7 +1,2 @@
-#:D:\Dev\kookbox\kookbox\kookbox\kookbox.xproj
-D:\Dev\kookbox\kookbox\kookbox\kookbox.xproj|D:\Dev\kookbox\kookbox\kookbox.core\kookbox.core.xproj
-#:D:\Dev\kookbox\kookbox\kookbox.core\kookbox.core.xproj
-#:D:\Dev\kookbox\kookbox\kookbox.sonos\kookbox.sonos.xproj
-D:\Dev\kookbox\kookbox\kookbox.sonos\kookbox.sonos.xproj|D:\Dev\kookbox\kookbox\kookbox.core\kookbox.core.xproj
-#:D:\Dev\kookbox\kookbox\kookbox.files\kookbox.files.xproj
-D:\Dev\kookbox\kookbox\kookbox.files\kookbox.files.xproj|D:\Dev\kookbox\kookbox\kookbox.core\kookbox.core.xproj
+#:C:\git\kookbox\kookbox\kookbox.mock\kookbox.mock.xproj
+C:\git\kookbox\kookbox\kookbox.mock\kookbox.mock.xproj|C:\git\kookbox\kookbox\kookbox.core\kookbox.core.xproj

@@ -62,7 +62,7 @@ namespace kookbox.core
             set
             {
                 // if playing, stop
-                CurrentTrack.IfHasValue(_ => Pause());
+                CurrentTrack.IfHasValue(async _ => await PauseAsync());
 
                 currentTrack = value;
                 // if track is still set and we were playing, play the new track
@@ -81,27 +81,27 @@ namespace kookbox.core
             }
         }
 
-        public void Open()
+        public async Task OpenAsync()
         {
             if (!CurrentTrack.HasValue)
-                InitialiseRoom();
+                await InitialiseRoom();
 
-            Play();
+            await PlayAsync();
         }
 
-        public void Close()
+        public async Task CloseAsync()
         {
-            Pause();
+            await PauseAsync();
         }
 
-        public void Play()
+        public async Task PlayAsync()
         {
-            CurrentTrack.IfHasValue(PlayTrack);   
+            CurrentTrack.IfHasValue(async track => await PlayTrackAsync(track));   
         }
 
-        public void Pause()
+        public async Task PauseAsync()
         {
-            CurrentTrack.IfHasValue(PauseTrack);    
+            CurrentTrack.IfHasValue(async track => await PauseTrackAsync(track));    
         }
 
         public IEnumerable<IQueuedMusicTrack> GetTrackHistory(int count)
@@ -109,7 +109,7 @@ namespace kookbox.core
             throw new NotImplementedException();
         }
 
-        private void PlayTrack(IQueuedMusicTrack queued)
+        private async Task PlayTrackAsync(IQueuedMusicTrack queued)
         {
             var player = queued.Track.Source.Player;
 
@@ -121,10 +121,10 @@ namespace kookbox.core
         private void SubscribePlayerEvents(IMusicPlayer player)
         {
             playerEventSubscription?.Dispose();
-            playerEventSubscription = player.Events.Subscribe(HandlePlayerEvent);
+            playerEventSubscription = player.Events.Subscribe(async evt => await HandlePlayerEventAsync(evt));
         }
 
-        private void HandlePlayerEvent(PlayerEvent playerEvent)
+        private async Task HandlePlayerEventAsync(PlayerEvent playerEvent)
         {
             switch (playerEvent)
             {
@@ -135,39 +135,38 @@ namespace kookbox.core
                 case PlayerEvent.PositionChange:
                     break;
                 case PlayerEvent.PlaybackComplete:
-                    CueNextTrack();
-                    Play();
+                    await CueNextTrackAsync();
+                    await PlayAsync();
                     break;
             }  
         }
 
-        private void PauseTrack(IQueuedMusicTrack queued)
+        private async Task PauseTrackAsync(IQueuedMusicTrack queued)
         {
             var player = queued.Track.Source.Player;
 
             player.Stop();
         }
 
-        private void InitialiseRoom()
+        private async Task InitialiseRoom()
         {
-            FillQueue();
+            await FillQueue();
             if (!CurrentTrack.HasValue)
-                CueNextTrack();
+                await CueNextTrackAsync();
         }
 
-        private void CueNextTrack()
+        private async Task CueNextTrackAsync()
         {
             CurrentTrack.IfHasValue(AddToHistory);
-
             CurrentTrack = UpcomingQueue.DequeueNextTrack();
-            FillQueue();
+            await FillQueue();
         }
 
-        private void FillQueue()
+        private async Task FillQueue()
         {
             // populate the queue if necessary
             while (UpcomingQueue.Count < upcomingMinimumCount)
-                UpcomingQueue.QueueTrack(DefaultTrackSource.GetNextTrack());
+                UpcomingQueue.QueueTrack(await DefaultTrackSource.GetNextTrackAsync());
         }
 
         private void AddToHistory(IQueuedMusicTrack track)

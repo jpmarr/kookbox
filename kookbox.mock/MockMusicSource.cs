@@ -5,16 +5,22 @@ using System.Threading.Tasks;
 using kookbox.core;
 using kookbox.core.Interfaces;
 
-namespace kookbox.files
+namespace kookbox.mock
 {
-    public class FilesMusicSource : IMusicSource
+    internal class MockMusicSource : 
+        IMusicSource, 
+        IMusicPlaylistSourceFactory
     {
-        public FilesMusicSource()
+        private readonly IMusicPlayer player;
+
+        public MockMusicSource()
         {
+            player = new MockMusicPlayer(this);
         }
 
-        public string Name => "Files";
-        public IMusicPlayer Player { get; }
+        public string Name => "Mock";
+        public PlaylistType SupportedPlaylistTypes => PlaylistType.All;
+        public IMusicPlayer Player => player;
 
         public Task<Option<IMusicTrack>> GetTrackAsync(string id)
         {
@@ -32,6 +38,11 @@ namespace kookbox.files
         }
 
         public Task<IMusicSearchResults> SearchAsync(string searchCriteria)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IMusicPlaylistSource> CreatePlaylistSourceAsync(string configuration)
         {
             throw new NotImplementedException();
         }
