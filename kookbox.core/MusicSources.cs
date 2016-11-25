@@ -8,7 +8,7 @@ namespace kookbox.core
 {
     public class MusicSources : IMusicSources
     {
-        public IEnumerable<IMusicSource> Sources { get; }
+        public IEnumerable<IMusicSource> AllSources { get; }
 
         public Task<IObservable<IMusicSearchResults>> SearchAsync(string searchCriteria)
         {

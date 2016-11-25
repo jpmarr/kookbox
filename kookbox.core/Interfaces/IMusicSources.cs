@@ -6,7 +6,7 @@ namespace kookbox.core.Interfaces
 {
     public interface IMusicSources
     {
-        IEnumerable<IMusicSource> Sources { get; }
+        IEnumerable<IMusicSource> AllSources { get; }
         // operations that work across multiple sources like Search etc
         Task<IObservable<IMusicSearchResults>> SearchAsync(string searchCriteria);
     }

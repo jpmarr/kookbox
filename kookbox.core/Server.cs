@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using kookbox.core.Interfaces;
+using System.Threading.Tasks;
 
 namespace kookbox.core
 {
     public class Server : IMusicServer
     {
-        public IMusicSources Sources { get; } = new MusicSources();
+        public IMusicSources SourceSet { get; } = new MusicSources();
         public INetworkTransports Transports { get; } = new NetworkTransports();
         public IEnumerable<IMusicListener> ConnectedListeners { get; }
         public IEnumerable<IMusicRoom> Rooms { get; }
@@ -19,17 +20,17 @@ namespace kookbox.core
             }
         }
 
-        public IMusicRoom CreateRoom(IMusicListener creator, string name)
+        public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)
         {
             throw new NotImplementedException();
         }
 
-        public IMusicListener ConnectListener(string username)
+        public Task<IMusicListener> ConnectListenerAsync(string username)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<IMusicListener> GetListeners(Paging paging)
+        public Task<IEnumerable<IMusicListener>> GetListenersAsync(Paging paging)
         {
             throw new NotImplementedException();
         }
