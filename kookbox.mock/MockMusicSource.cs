@@ -44,7 +44,7 @@ namespace kookbox.mock
 
         public Task<IMusicPlaylistSource> CreatePlaylistSourceAsync(string configuration)
         {
-            throw new NotImplementedException();
+            return Task.FromResult<IMusicPlaylistSource>(new MockMusicPlaylistSource());
         }
     }
 }
