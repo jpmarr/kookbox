@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using kookbox.core;
 using kookbox.core.Interfaces;
 
 namespace kookbox.mock
 {
-    internal class MockMusicSource : 
+    public class MockMusicSource : 
         IMusicSource, 
         IMusicPlaylistSourceFactory
     {

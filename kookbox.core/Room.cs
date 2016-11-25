@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using kookbox.core.Interfaces;
 using kookbox.core.Interfaces.Serialisation;
@@ -11,7 +10,7 @@ namespace kookbox.core
     {
         private readonly IMusicServer server;
         private readonly int upcomingMinimumCount;
-
+        private readonly List<IMusicRoomListener> listeners = new List<IMusicRoomListener>();
         private IDisposable playerEventSubscription;
         private Option<IQueuedMusicTrack> currentTrack = Option<IQueuedMusicTrack>.None();
 
@@ -48,13 +47,15 @@ namespace kookbox.core
 
             Creator = creator;
             Name = name;
+
+            listeners.Add(new RoomListener(this, creator));
         }
 
         public string Name { get; }
         public IMusicListener Creator { get; }
         
-        //todo: multiple sources???
-        public IMusicPlaylistSource DefaultTrackSource { get; }
+        //todo: multiple sources??? legal to have no -source from a 'request-only' room?
+        public Option<IMusicPlaylistSource> DefaultTrackSource { get; set; }
 
         public Option<IQueuedMusicTrack> CurrentTrack
         {
@@ -71,7 +72,7 @@ namespace kookbox.core
         } 
 
         public IMusicQueue UpcomingQueue { get; }
-        public IEnumerable<IMusicRoomListener> Listeners { get; }
+        public IEnumerable<IMusicRoomListener> Listeners => listeners;
 
         public RoomState State
         {
@@ -165,8 +166,11 @@ namespace kookbox.core
         private async Task FillQueue()
         {
             // populate the queue if necessary
-            while (UpcomingQueue.Count < upcomingMinimumCount)
-                UpcomingQueue.QueueTrack(await DefaultTrackSource.GetNextTrackAsync());
+            DefaultTrackSource.IfHasValue(async trackSource =>
+            {
+                while (UpcomingQueue.Count < upcomingMinimumCount)
+                    UpcomingQueue.QueueTrack(await trackSource.GetNextTrackAsync());
+            });
         }
 
         private void AddToHistory(IQueuedMusicTrack track)

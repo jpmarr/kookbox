@@ -51,6 +51,13 @@ namespace kookbox.core
         public static bool operator ==(Option<T> left, Option<T> right) => left.Equals(right);
         public static bool operator !=(Option<T> left, Option<T> right) => !left.Equals(right);
 
+        /*
+        public static implicit operator Option<T>(T value)
+        {
+            return new Option<T>(value);
+        }
+        */
+
         public override bool Equals(object obj) => obj is Option<T> && Equals((Option<T>)obj);
 
         public override int GetHashCode()
@@ -60,6 +67,14 @@ namespace kookbox.core
                 return value.GetHashCode();
             }
             return 0;
+        }
+    }
+
+    public static class Option
+    {
+        public static Option<T> Some<T>(T value)
+        {
+            return Option<T>.Some(value);    
         }
     }
 }

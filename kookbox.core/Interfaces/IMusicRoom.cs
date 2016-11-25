@@ -12,7 +12,7 @@ namespace kookbox.core.Interfaces
     {
         string Name { get; }
         IMusicListener Creator { get; }
-        IMusicPlaylistSource DefaultTrackSource { get; set; }
+        Option<IMusicPlaylistSource> DefaultTrackSource { get; set; }
         Option<IQueuedMusicTrack> CurrentTrack { get; }
         IMusicQueue UpcomingQueue { get; }
         IEnumerable<IMusicRoomListener> Listeners { get; }

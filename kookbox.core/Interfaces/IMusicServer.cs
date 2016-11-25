@@ -6,7 +6,7 @@ namespace kookbox.core.Interfaces
     public interface IMusicServer
     {
         IMusicEventBus EventBus { get; }
-        IMusicSources SourceSet { get; }
+        IMusicSources Sources { get; }
         IEnumerable<IMusicListener> ConnectedListeners { get; }
         IEnumerable<IMusicRoom> Rooms { get; }
 
