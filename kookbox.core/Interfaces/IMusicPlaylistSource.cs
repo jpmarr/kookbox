@@ -7,8 +7,9 @@ namespace kookbox.core.Interfaces
     {
         string Name { get; }
         PlaylistType PlaylistType { get; }
+        bool IsExhausted { get; }
 
-        Task<IMusicTrack> GetNextTrackAsync();
+        Task<Option<IMusicTrack>> GetNextTrackAsync();
     }
 
     [Flags]

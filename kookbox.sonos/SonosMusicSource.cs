@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using kookbox.core;
 using kookbox.core.Interfaces;
 
@@ -11,7 +12,19 @@ namespace kookbox.sonos
         }
 
         public string Name => "Sonos";
-        public IMusicPlayer Player { get; }
+        public PlayerCapabilities PlayerCapabilities { get; }
+        public IEnumerable<IMusicPlayerDescriptor> AllPlayers { get; }
+        public IEnumerable<IMusicPlayerDescriptor> AvailablePlayers { get; }
+        public Task<Option<IMusicPlayer>> RequestPlayerAsync(IMusicRoom room, string playerId)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task<Option<IMusicPlayer>> RequestAvailablePlayerAsync(IMusicRoom room)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public Task<Option<IMusicTrack>> GetTrackAsync(string id)
         {
             throw new System.NotImplementedException();

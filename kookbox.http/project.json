@@ -3,6 +3,10 @@
 
   "dependencies": {
     "kookbox.core": "1.0.0-*",
+    "Microsoft.AspNetCore.Mvc": "1.1.0",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.1.0",
+    "Microsoft.AspNetCore.StaticFiles": "1.1.0",
+    "Microsoft.AspNetCore.WebSockets.Server": "0.1.0",
     "NETStandard.Library": "1.6.1"
   },
 

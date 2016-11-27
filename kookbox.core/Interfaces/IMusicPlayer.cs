@@ -2,14 +2,14 @@
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicPlayer
+    public interface IMusicPlayer : IMusicPlayerDescriptor
     {
         void Play(IMusicTrack track);
         void Stop();
 
         void Seek(TimeSpan position);
 
-        IMusicTrack CurrentTrack { get; }
+        Option<IMusicTrack> CurrentTrack { get; }
         TimeSpan CurrentPosition { get; }
         bool IsPlaying { get; }
         bool CanSeek { get; }

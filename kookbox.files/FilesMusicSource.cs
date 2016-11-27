@@ -14,7 +14,18 @@ namespace kookbox.files
         }
 
         public string Name => "Files";
-        public IMusicPlayer Player { get; }
+        public PlayerCapabilities PlayerCapabilities { get; }
+        public IEnumerable<IMusicPlayerDescriptor> AllPlayers { get; }
+        public IEnumerable<IMusicPlayerDescriptor> AvailablePlayers { get; }
+        public Task<Option<IMusicPlayer>> RequestPlayerAsync(IMusicRoom room, string playerId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Option<IMusicPlayer>> RequestAvailablePlayerAsync(IMusicRoom room)
+        {
+            throw new NotImplementedException();
+        }
 
         public Task<Option<IMusicTrack>> GetTrackAsync(string id)
         {

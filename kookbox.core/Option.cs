@@ -29,15 +29,6 @@ namespace kookbox.core
             HasValue = true;
         }
 
-        public void IfHasValue(Action<T> action)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
-
-            if (HasValue)
-                action(value);
-        }
-
         public bool Equals(Option<T> other)
         {
             if (HasValue != other.HasValue)
@@ -75,6 +66,13 @@ namespace kookbox.core
         public static Option<T> Some<T>(T value)
         {
             return Option<T>.Some(value);    
+        }
+
+        public static Option<T> Create<T>(T value) where T : class
+        {
+            if (value != null)
+                return Option<T>.Some(value);
+            return Option<T>.None();
         }
     }
 }

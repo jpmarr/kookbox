@@ -11,29 +11,40 @@ namespace kookbox.core
         private readonly List<IMusicListener> connectedListeners = new List<IMusicListener>();
 
         public IMusicSources Sources { get; } = new MusicSources();
-        public INetworkTransports Transports { get; } = new NetworkTransports();
         public IEnumerable<IMusicListener> ConnectedListeners => connectedListeners;
         public IEnumerable<IMusicRoom> Rooms => rooms;
 
-        public IMusicEventBus EventBus
+        public void Start()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            // todo: deerialize any state here    
         }
 
         public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)
         {
+            if (creator == null)
+                throw new ArgumentNullException(nameof(creator));
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
             var room = new Room(this, creator, name);
             rooms.Add(room);
+
+            // todo: room created...
+            SendMessageToAllListeners(null);
 
             return Task.FromResult<IMusicRoom>(room);
         }
 
-        public Task<IMusicListener> ConnectListenerAsync(string username)
+        public Task<IMusicListener> ConnectListenerAsync(string username, INetworkTransport transport)
         {
-            var listener = new MusicListener(this, username);
+            if (username == null)
+                throw new ArgumentNullException(nameof(username));
+            if (transport == null)
+                throw new ArgumentNullException(nameof(transport));
+
+            //todo: find listener?
+
+            var listener = new MusicListener(this, transport, username);
             connectedListeners.Add(listener);
 
             return Task.FromResult<IMusicListener>(listener);
@@ -42,6 +53,13 @@ namespace kookbox.core
         public Task<IEnumerable<IMusicListener>> GetListenersAsync(Paging paging)
         {
             throw new NotImplementedException();
+        }
+
+        private void SendMessageToAllListeners(INetworkMessage message)
+        {
+            foreach (var listener in connectedListeners)
+                foreach (var transport in listener.Transports)
+                    transport.SendMessageAsync(message);
         }
     }
 }

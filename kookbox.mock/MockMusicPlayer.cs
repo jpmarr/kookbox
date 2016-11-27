@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using kookbox.core.Interfaces;
 using System.Reactive.Subjects;
+using kookbox.core;
 
 namespace kookbox.mock
 {
@@ -10,17 +11,22 @@ namespace kookbox.mock
         private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
         private readonly IMusicSource source;
+        private readonly string id;
+        private readonly string description;
         private IMusicTrack currentTrack;
         private TimeSpan currentPosition;
         private readonly Subject<PlayerEvent> events = new Subject<PlayerEvent>();
         private bool isPlaying;
         private IDisposable subscription;
+        private IMusicRoom currentRoom;
 
-        public MockMusicPlayer(IMusicSource source)
+        public MockMusicPlayer(IMusicSource source, string id, string description)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
             this.source = source;
+            this.id = id;
+            this.description = description;
         }
 
         public void Play(IMusicTrack track)
@@ -40,13 +46,13 @@ namespace kookbox.mock
             events.OnNext(PlayerEvent.StartPlaying);
             subscription = Observable
                 .Generate(currentPosition, i => i < currentTrack.Duration, i => i + OneSecond, i => i, i => OneSecond)
+                .Finally(() => events.OnNext(PlayerEvent.PlaybackComplete))
                 .Subscribe(
                     pos =>
                     {
                         currentPosition = pos;
                         events.OnNext(PlayerEvent.PositionChange);
-                    },
-                    _ => events.OnNext(PlayerEvent.PlaybackComplete));
+                    });
         }
 
         public void Stop()
@@ -66,10 +72,20 @@ namespace kookbox.mock
             throw new NotImplementedException();
         }
 
-        public IMusicTrack CurrentTrack => currentTrack;
+        public Option<IMusicRoom> CurrentRoom { get; }
+
+        public Option<IMusicTrack> CurrentTrack => Option.Create(currentTrack);
         public bool CanSeek => false;
         public IObservable<PlayerEvent> Events => events;
         public TimeSpan CurrentPosition => currentPosition;
         public bool IsPlaying => isPlaying;
+        public string Id => id;
+        public string Description => description;
+        public IMusicSource Source => source;
+
+        internal void AssignToRoom(IMusicRoom room)
+        {
+            currentRoom = room;
+        }
     }
 }

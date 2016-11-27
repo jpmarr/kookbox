@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using kookbox.core;
 using kookbox.core.Interfaces;
+using kookbox.http;
 using kookbox.mock;
 
 namespace kookbox
@@ -18,11 +18,16 @@ namespace kookbox
 
         private static async void DoTheStuffAsync()
         {
-            var server = new Server();
-
+            IMusicServer server = new Server();
             server.Sources.RegisterMusicSource(new MockMusicSource());
+            server.Start();
 
-            var listener = await server.ConnectListenerAsync("jim");
+            var http = new KookboxHttpServer(server);
+            http.Start();
+
+
+            /*
+            var listener = await server.ConnectListenerAsync("jim", null);
             var room = await server.CreateRoomAsync(listener, "Test Room");
 
             var source = server.Sources.First();
@@ -35,6 +40,7 @@ namespace kookbox
             room.DefaultTrackSource = Option.Some(playlist);
 
             await room.OpenAsync();
+            */
         }
     }
 }

@@ -9,5 +9,7 @@ namespace kookbox.core.Interfaces
         Option<IMusicRoom> ActiveRoom { get; }
         Option<IBan> Ban { get; }
         IEnumerable<IMusicListenerRole> ServerRoles { get; }
+        // user may have multiple connections with different trasnports (ie multiple browser sessions or browser + API connection)
+        IEnumerable<INetworkTransport> Transports { get; }
     }
 }

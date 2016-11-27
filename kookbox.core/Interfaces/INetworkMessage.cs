@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
-    public interface INetworkTransports
+    public interface INetworkMessage
     {
+        short MessageType { get; }
+        byte Version { get; }
+        long CorrelationId { get; }
     }
 }

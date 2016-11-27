@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
-    interface INetworkTransport
+    public interface INetworkTransport
     {
+        Task SendMessageAsync(INetworkMessage message);
+        IObservable<INetworkMessage> ReceivedMessages { get; }
     }
 }
