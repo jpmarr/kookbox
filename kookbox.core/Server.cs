@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using kookbox.core.Interfaces;
 using System.Threading.Tasks;
+using kookbox.core.Messaging;
 
 namespace kookbox.core
 {
@@ -13,6 +15,12 @@ namespace kookbox.core
         public IMusicSources Sources { get; } = new MusicSources();
         public IEnumerable<IMusicListener> ConnectedListeners => connectedListeners;
         public IEnumerable<IMusicRoom> Rooms => rooms;
+
+        public Server()
+        {
+            //todo: right place for this???
+            MessageRegistry.RegisterPayloadTypesInAssembly(typeof(NetworkMessage).GetTypeInfo().Assembly);    
+        }
 
         public void Start()
         {
