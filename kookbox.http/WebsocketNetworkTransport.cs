@@ -57,9 +57,19 @@ namespace kookbox.http
                     var payload = Encoding.UTF8.GetString(readBuffer, 0, offset + result.Count);
                     using (var reader = new JsonTextReader(new StringReader(payload)) { CloseInput = true })
                     {
+                        /* Let's assume message structure is:
+                         * {
+                         *      messagetype: short,
+                         *      version: byte,
+                         *      payload: {
+                         *      
+                         *          serialised form of message payload type
+                         *      } 
+                         */
+
                         var messageType = reader.ReadAsInt32();
                         Type payloadType;
-                        if (messageType == null || !MessageRegistry.TryGetPayloadType((short)messageType, out payloadType))
+                        if (messageType == null || !MessageRegistry.TryGetPayloadType((short)messageType, 1, out payloadType))
                             throw new InvalidOperationException($"Unable to map payload type for message type: {messageType}");
 
                         var message = serializer.Deserialize(reader, payloadType) as INetworkMessage;
