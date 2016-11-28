@@ -11,5 +11,7 @@ namespace kookbox.core.Interfaces
         IEnumerable<IMusicListenerRole> ServerRoles { get; }
         // user may have multiple connections with different trasnports (ie multiple browser sessions or browser + API connection)
         IEnumerable<INetworkTransport> Transports { get; }
+
+        void AddTransport(INetworkTransport transport);
     }
 }

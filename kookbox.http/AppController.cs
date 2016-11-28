@@ -1,7 +1,4 @@
-﻿using System.IO;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Net.Http.Headers;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace kookbox.http
 {
@@ -14,7 +11,20 @@ namespace kookbox.http
         [HttpGet("/")]
         public ActionResult Default()
         {
-            return Content($"<html><head></head><body><p>Hello There from {Directory.GetCurrentDirectory()}</p><img src='images/_MG_4167.jpg' /></body></html>", "text/html");
+            return Content(
+                "<html>" +
+                    "<head>" +
+                        "<script src=\"https://unpkg.com/react@15/dist/react.min.js\" type=\"text/javascript\"></script>" +
+                        "<script src=\"https://unpkg.com/react-dom@15/dist/react-dom.min.js\" type=\"text/javascript\"></script>" +
+                        "<script src=\"/scripts/app.js\" type=\"text/javascript\"></script>" +
+                    "</head>" +
+                    "<body>" +
+                        "<div id=\"app\"></div>" +
+                        "<script>" +
+                            "ReactDOM.render(React.createElement(KookboxApp, { test: \"Hello\" }, null), document.getElementById(\"app\"));" +
+                        "</script>" +
+                    "</body>" +
+                "</html>", "text/html");
         }
     }
 }

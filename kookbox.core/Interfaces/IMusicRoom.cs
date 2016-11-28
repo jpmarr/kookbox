@@ -10,6 +10,7 @@ namespace kookbox.core.Interfaces
     /// </summary>
     public interface IMusicRoom
     {
+        string Id { get; }
         string Name { get; }
         IMusicListener Creator { get; }
         Option<IMusicPlaylistSource> DefaultTrackSource { get; set; }

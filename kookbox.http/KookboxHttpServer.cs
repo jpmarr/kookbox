@@ -40,12 +40,6 @@ namespace kookbox.http
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                //todo: need a solution to this (serve from resources?)
-                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "..", "kookbox.http", "wwwroot"))
-            });
-            app.UseMvc();
             app.UseWebSockets();
             app.Use(async (http, next) =>
             {
@@ -55,20 +49,18 @@ namespace kookbox.http
                 else
                     await next();
             });
-            // todo: remove this once we're cooking on gas
-            app.Run(async context =>
+            app.UseMvc();
+            app.UseStaticFiles(new StaticFileOptions
             {
-                await context.Response.WriteAsync(
-                    "Hello World. The Time is: " +
-                    DateTime.Now.ToString("hh:mm:ss tt"));
-
+                //todo: need a solution to this (serve from resources?)
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "..", "kookbox.http", "wwwroot"))
             });
         }
 
         private async Task HandleWebSocketRequest(HttpContext http)
         {
             var socket = await http.WebSockets.AcceptWebSocketAsync();
-            await server.ConnectListenerAsync(http.User.Identity.Name, new WebsocketNetworkTransport(socket));
+            await server.ConnectListenerAsync("jim", new WebsocketNetworkTransport(socket));
         }
     }
 }
