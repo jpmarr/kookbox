@@ -1,14 +1,12 @@
 ﻿using System;
 using kookbox.core.Interfaces;
 
-namespace kookbox.core.Messaging
+namespace kookbox.core.Messaging.Payloads
 {
     [RegisteredPayload(MessageTypes.TrackStarted, version: 1)]
-    public class TrackStartedMessage : NetworkMessage
+    public class TrackStarted : MessagePayload
     {
-        // todo: grab the runtime props from the attribute to avoid code
-        public TrackStartedMessage(IMusicRoom room, IMusicTrack track)
-            : base(MessageTypes.TrackStarted, 1)
+        public TrackStarted(IMusicRoom room, IMusicTrack track)
         {
             if (room == null)
                 throw new ArgumentNullException(nameof(room));

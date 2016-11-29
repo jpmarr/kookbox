@@ -12,6 +12,7 @@ using kookbox.core.Interfaces;
 using kookbox.core.Messaging;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace kookbox.http
 {
@@ -38,11 +39,9 @@ namespace kookbox.http
 
         public async Task OpenAsync()
         {
-            socket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+            socket = await context.WebSockets.AcceptWebSocketAsync();
             QueueMessage(MessageFactory.ConnectionResponse());
-#pragma warning disable 4014
-            //BeginReceive();
-#pragma warning restore 4014
+            await BeginReceive();
         }
 
         public void QueueMessage(INetworkMessage message)
@@ -61,7 +60,7 @@ namespace kookbox.http
                 new ArraySegment<byte>(writeBuffer, 0, payloadLength),
                 WebSocketMessageType.Text,
                 true,
-                CancellationToken.None).ConfigureAwait(false);
+                CancellationToken.None);
         }
 
         private async Task BeginReceive()
@@ -71,34 +70,16 @@ namespace kookbox.http
             {
                 var result = await socket.ReceiveAsync(
                     new ArraySegment<byte>(readBuffer, offset, readBuffer.Length - offset),
-                    CancellationToken.None).ConfigureAwait(false);
+                    CancellationToken.None);
 
                 if (result.EndOfMessage)
                 {
-                    var payload = Encoding.UTF8.GetString(readBuffer, 0, offset + result.Count);
-                    using (var reader = new JsonTextReader(new StringReader(payload)) { CloseInput = true })
-                    {
-                        /* Let's assume message structure is:
-                         * {
-                         *      messagetype: short,
-                         *      version: byte,
-                         *      payload: {
-                         *      
-                         *          serialised form of message payload type
-                         *      } 
-                         */
-
-                        var messageType = reader.ReadAsInt32();
-                        Type payloadType;
-                        if (messageType == null || !MessageRegistry.TryGetPayloadType((short)messageType, 1, out payloadType))
-                            throw new InvalidOperationException($"Unable to map payload type for message type: {messageType}");
-
-                        var message = serializer.Deserialize(reader, payloadType) as INetworkMessage;
-                        if (message == null)
-                            throw new InvalidOperationException($"Payload type {payloadType.Name} is not a valid type.");
-
+                    var messageText = Encoding.UTF8.GetString(readBuffer, 0, offset + result.Count);
+                    INetworkMessage message;
+                    if (TryParseNetworkMessage(messageText, out message))
                         messageSink.OnNext(message);
-                    }
+                    else
+                        throw new InvalidOperationException("Unable to parse message type");
 
                     offset = 0;
                 }
@@ -107,6 +88,67 @@ namespace kookbox.http
             }
 
             messageSink.OnCompleted();
+        }
+
+        private bool TryParseNetworkMessage(string messageText, out INetworkMessage message)
+        {
+            /* Let's assume message structure is:
+             * {
+             *      messagetype: short,
+             *      version: byte,
+             *      payload: {
+             *      
+             *          serialised form of message payload type
+             *      } 
+             */
+            short messageType = 0;
+            byte version = 0;
+            long? correlationId = null;
+            JObject payloadJson = null;
+            message = null;
+
+            using (var reader = new JsonTextReader(new StringReader(messageText)) {CloseInput = true})
+            {
+                while (reader.Read())
+                {
+                    if (reader.Value == null || reader.TokenType != JsonToken.PropertyName)
+                        continue;
+
+                    var propertyName = reader.Value.ToString();
+                    switch (propertyName)
+                    {
+                        case "messageType":
+                            messageType = (short)(reader.ReadAsInt32() ?? 0);
+                            if (messageType == 0)
+                                return false;
+                            break;
+                        case "version":
+                            version = (byte)(reader.ReadAsInt32() ?? 0);
+                            if (version == 0)
+                                return false;
+                            break;
+                        case "correlationId":
+                            var correlationAsDecimal = reader.ReadAsDecimal();
+                            if (correlationAsDecimal.HasValue)
+                                correlationId = (long)correlationAsDecimal.Value;
+                            break;
+                        case "payload":
+                            payloadJson = JObject.Load(reader);
+                            break;
+                        default:
+                            return false;
+                    }
+                }
+            }
+
+            if (messageType == 0 || version == 0 || payloadJson == null)
+                return false;
+
+            var payloadType = MessageRegistry.GetPayloadType(messageType, version);
+            var payload = serializer.Deserialize(payloadJson.CreateReader(), payloadType);
+            message = MessageFactory.Create(messageType, version, correlationId, payload);
+
+            return true;
         }
     }
 }

@@ -32,12 +32,13 @@ namespace kookbox.core.Messaging
             payloadTypes.Add(GetMessageKey(messageType, version), payloadType);   
         }
 
-        public static bool TryGetPayloadType(short messageType, byte version, out Type payloadType)
+        public static Type GetPayloadType(short messageType, byte version)
         {
-            if (payloadTypes.TryGetValue(GetMessageKey(messageType, version), out payloadType))
+            Type payloadType;
+            if (!payloadTypes.TryGetValue(GetMessageKey(messageType, version), out payloadType))
                 throw new ArgumentException($"Unable to located a registered payload type for messsage type {messageType} (v{version})");
 
-            return true;
+            return payloadType;
         }
 
         private static uint GetMessageKey(short messageType, byte version)
