@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using kookbox.core.Interfaces;
 using System.Threading.Tasks;
@@ -24,7 +25,23 @@ namespace kookbox.core
 
         public void Start()
         {
-            // todo: deerialize any state here    
+            // todo: deserialize any state here    
+
+            // todo: temp - this will loaded from state storage
+            var listener = new MusicListener(this, "jim");
+            connectedListeners.Add(listener);
+
+            var room = CreateRoomAsync(listener, "Test Room").Result;
+            var source = Sources.First();
+
+            IMusicPlaylistSource playlist = null;
+            var playlistFactory = source as IMusicPlaylistSourceFactory;
+            if (playlistFactory != null)
+                playlist = playlistFactory.CreatePlaylistSourceAsync("random").Result;
+
+            room.DefaultTrackSource = Option.Some(playlist);
+
+            room.OpenAsync().Wait();
         }
 
         public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)
@@ -50,12 +67,21 @@ namespace kookbox.core
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));
 
-            //todo: find listener?
+            IMusicListener listener = null;
+            var maybeListener = GetListener(username);
+            maybeListener
+                .IfHasValue(l =>
+                {
+                    l.AddTransport(transport);
+                    listener = l;
+                })
+                .Else(() =>
+                {
+                    listener = new MusicListener(this, username, transport);
+                    connectedListeners.Add(listener);
+                });
 
-            var listener = new MusicListener(this, transport, username);
-            connectedListeners.Add(listener);
-
-            return Task.FromResult<IMusicListener>(listener);
+            return Task.FromResult(listener);
         }
 
         public Task<IEnumerable<IMusicListener>> GetListenersAsync(Paging paging)
@@ -63,11 +89,17 @@ namespace kookbox.core
             throw new NotImplementedException();
         }
 
+        private Option<IMusicListener> GetListener(string username)
+        {
+            // todo: overall user store
+            return Option.Create(connectedListeners.FirstOrDefault(l => l.Name == username));
+        }
+
         private void SendMessageToAllListeners(INetworkMessage message)
         {
             foreach (var listener in connectedListeners)
                 foreach (var transport in listener.Transports)
-                    transport.SendMessageAsync(message);
+                    transport.QueueMessage(message);
         }
     }
 }

@@ -7,41 +7,62 @@ using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using kookbox.core.Interfaces;
 using kookbox.core.Messaging;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace kookbox.http
 {
     internal class WebsocketNetworkTransport : INetworkTransport
     {
-        private readonly WebSocket socket;
+        private readonly HttpContext context;
+        private WebSocket socket;
         private readonly Subject<INetworkMessage> messageSink = new Subject<INetworkMessage>();
         // todo: better buffer management
         private readonly byte[] writeBuffer = new byte[4096];
         private readonly byte[] readBuffer = new byte[4096];
         private readonly CancellationTokenSource cancellation = new CancellationTokenSource();
         private readonly JsonSerializer serializer = JsonSerializer.CreateDefault();
+        private readonly ActionBlock<INetworkMessage> messageQueue;
 
-        public WebsocketNetworkTransport(WebSocket socket)
+        public WebsocketNetworkTransport(HttpContext context)
         {
-            this.socket = socket;
-            BeginReceive();
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            this.context = context;
+            messageQueue = new ActionBlock<INetworkMessage>(SendMessageAsync);
         }
 
-        public Task SendMessageAsync(INetworkMessage message)
+        public async Task OpenAsync()
+        {
+            socket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
+            QueueMessage(MessageFactory.ConnectionResponse());
+#pragma warning disable 4014
+            //BeginReceive();
+#pragma warning restore 4014
+        }
+
+        public void QueueMessage(INetworkMessage message)
+        {
+            messageQueue.Post(message);
+        }
+
+        public IObservable<INetworkMessage> ReceivedMessages => messageSink;
+
+        private async Task SendMessageAsync(INetworkMessage message)
         {
             var payload = JsonConvert.SerializeObject(message);
             var payloadLength = Encoding.UTF8.GetBytes(payload, 0, payload.Length, writeBuffer, 0);
 
-            return socket.SendAsync(
-                new ArraySegment<byte>(writeBuffer, 0, payloadLength), 
-                WebSocketMessageType.Text, 
+            await socket.SendAsync(
+                new ArraySegment<byte>(writeBuffer, 0, payloadLength),
+                WebSocketMessageType.Text,
                 true,
-                CancellationToken.None);
+                CancellationToken.None).ConfigureAwait(false);
         }
-
-        public IObservable<INetworkMessage> ReceivedMessages => messageSink;
 
         private async Task BeginReceive()
         {
@@ -49,8 +70,8 @@ namespace kookbox.http
             while (socket.State == WebSocketState.Open)
             {
                 var result = await socket.ReceiveAsync(
-                    new ArraySegment<byte>(readBuffer, offset, readBuffer.Length - offset), 
-                    cancellation.Token);
+                    new ArraySegment<byte>(readBuffer, offset, readBuffer.Length - offset),
+                    CancellationToken.None).ConfigureAwait(false);
 
                 if (result.EndOfMessage)
                 {

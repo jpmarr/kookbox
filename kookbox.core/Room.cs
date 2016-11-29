@@ -55,6 +55,7 @@ namespace kookbox.core
             listeners.Add(new RoomListener(this, creator));
         }
 
+        public string Id { get; }
         public string Name { get; }
         public IMusicListener Creator { get; }
         
@@ -177,7 +178,7 @@ namespace kookbox.core
         private void HandlePlaybackStarted(IQueuedMusicTrack queued)
         {
             Console.WriteLine($"Start Track: \"{queued.Track.Title}\" - Duration: {queued.Track.Duration}");
-            SendMessageToAllListeners(new TrackStartedMessage(queued.Track));
+            SendMessageToAllListeners(MessageFactory.TrackStarted(this, queued.Track));
         }
 
         private async Task PauseTrackAsync(IQueuedMusicTrack queued)
@@ -222,7 +223,7 @@ namespace kookbox.core
         {
             foreach (var roomListener in listeners)
                 foreach (var transport in roomListener.Listener.Transports)
-                    transport.SendMessageAsync(message);
+                    transport.QueueMessage(message);
         }
     }
 }

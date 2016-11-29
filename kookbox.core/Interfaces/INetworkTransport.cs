@@ -7,7 +7,7 @@ namespace kookbox.core.Interfaces
 {
     public interface INetworkTransport
     {
-        Task SendMessageAsync(INetworkMessage message);
+        void QueueMessage(INetworkMessage message);
         IObservable<INetworkMessage> ReceivedMessages { get; }
     }
 }

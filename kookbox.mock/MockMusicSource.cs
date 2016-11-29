@@ -122,7 +122,8 @@ namespace kookbox.mock
 
         private TimeSpan GetRandomTrackDuration(Random rng)
         {
-            return TimeSpan.FromMilliseconds(rng.Next(120000, 300000));
+            return TimeSpan.FromMilliseconds(rng.Next(2000, 4000));
+            //return TimeSpan.FromMilliseconds(rng.Next(120000, 300000));
         }
     }
 }
