@@ -14,8 +14,8 @@ namespace kookbox.http
             return Content(
                 "<html>" +
                     "<head>" +
-                        "<script src=\"https://unpkg.com/react@15/dist/react.min.js\" type=\"text/javascript\"></script>" +
-                        "<script src=\"https://unpkg.com/react-dom@15/dist/react-dom.min.js\" type=\"text/javascript\"></script>" +
+                        "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/react/0.14.6/react.min.js\" type=\"text/javascript\"></script>" +
+                        "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/react/0.14.6/react-dom.min.js\" type=\"text/javascript\"></script>" +
                         "<script src=\"/scripts/app.js\" type=\"text/javascript\"></script>" +
                     "</head>" +
                     "<body>" +

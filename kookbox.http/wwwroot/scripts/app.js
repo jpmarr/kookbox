@@ -15,7 +15,17 @@ var KookboxApp = (function (_super) {
     return KookboxApp;
 }(React.Component));
 var socket = new WebSocket("ws://localhost:5000");
+socket.onopen = function () {
+    console.log("socket opened");
+};
 socket.onmessage = function (msg) {
-    //console.log(msg.data);
+    console.log(msg.data);
+    return false;
+};
+socket.onerror = function (evt) {
+    console.log("error:" + evt);
+};
+socket.onclose = function () {
+    console.log("socket closed");
 };
 //# sourceMappingURL=app.js.map

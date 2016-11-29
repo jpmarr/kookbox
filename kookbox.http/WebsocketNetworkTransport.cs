@@ -10,13 +10,15 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using kookbox.core.Interfaces;
 using kookbox.core.Messaging;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace kookbox.http
 {
     internal class WebsocketNetworkTransport : INetworkTransport
     {
-        private readonly WebSocket socket;
+        private readonly HttpContext context;
+        private WebSocket socket;
         private readonly Subject<INetworkMessage> messageSink = new Subject<INetworkMessage>();
         // todo: better buffer management
         private readonly byte[] writeBuffer = new byte[4096];
@@ -25,16 +27,22 @@ namespace kookbox.http
         private readonly JsonSerializer serializer = JsonSerializer.CreateDefault();
         private readonly ActionBlock<INetworkMessage> messageQueue;
 
-        public WebsocketNetworkTransport(WebSocket socket)
+        public WebsocketNetworkTransport(HttpContext context)
         {
-            this.socket = socket;
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+
+            this.context = context;
             messageQueue = new ActionBlock<INetworkMessage>(SendMessageAsync);
+        }
 
-#pragma warning disable 4014
-            BeginReceive();
-#pragma warning restore 4014
-
+        public async Task OpenAsync()
+        {
+            socket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
             QueueMessage(MessageFactory.ConnectionResponse());
+#pragma warning disable 4014
+            //BeginReceive();
+#pragma warning restore 4014
         }
 
         public void QueueMessage(INetworkMessage message)
@@ -63,7 +71,7 @@ namespace kookbox.http
             {
                 var result = await socket.ReceiveAsync(
                     new ArraySegment<byte>(readBuffer, offset, readBuffer.Length - offset),
-                    cancellation.Token);
+                    CancellationToken.None).ConfigureAwait(false);
 
                 if (result.EndOfMessage)
                 {

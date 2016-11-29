@@ -59,8 +59,9 @@ namespace kookbox.http
 
         private async Task HandleWebSocketRequest(HttpContext http)
         {
-            var socket = await http.WebSockets.AcceptWebSocketAsync();
-            await server.ConnectListenerAsync("jim", new WebsocketNetworkTransport(socket));
+            var transport = new WebsocketNetworkTransport(http);
+            await server.ConnectListenerAsync("jim", transport);
+            await transport.OpenAsync();
         }
     }
 }
