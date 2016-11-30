@@ -10,7 +10,7 @@ namespace kookbox.core.Interfaces
     {
         short MessageType { get; }
         byte Version { get; }
-        long CorrelationId { get; }
+        long? CorrelationId { get; }
     }
 
     public interface INetworkMessage<out T> : INetworkMessage where T : MessagePayload

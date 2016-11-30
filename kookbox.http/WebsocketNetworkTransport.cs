@@ -145,7 +145,7 @@ namespace kookbox.http
                 return false;
 
             var payloadType = MessageRegistry.GetPayloadType(messageType, version);
-            var payload = serializer.Deserialize(payloadJson.CreateReader(), payloadType);
+            var payload = serializer.Deserialize(payloadJson.CreateReader(), payloadType) as MessagePayload;
             message = MessageFactory.Create(messageType, version, correlationId, payload);
 
             return true;

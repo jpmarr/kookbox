@@ -14,7 +14,7 @@ namespace kookbox.core.Messaging
         {
         }
 
-        protected NetworkMessage(short messageType, byte version, long correlationId)
+        protected NetworkMessage(short messageType, byte version, long? correlationId)
         {
             MessageType = messageType;
             Version = version;
@@ -23,7 +23,7 @@ namespace kookbox.core.Messaging
 
         public short MessageType { get; }
         public byte Version { get; }
-        public long CorrelationId { get; }
+        public long? CorrelationId { get; }
 
         public static INetworkMessage Create<T>(T payload) where T: MessagePayload
         {
@@ -45,7 +45,7 @@ namespace kookbox.core.Messaging
             Payload = payload;
         }
 
-        public NetworkMessage(short messageType, byte version, long correlationId, T payload) : base(messageType, version, correlationId)
+        public NetworkMessage(short messageType, byte version, long? correlationId, T payload) : base(messageType, version, correlationId)
         {
             Payload = payload;
         }

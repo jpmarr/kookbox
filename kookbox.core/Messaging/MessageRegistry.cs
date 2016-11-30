@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
+using kookbox.core.Interfaces;
 
 namespace kookbox.core.Messaging
 {
@@ -29,7 +31,8 @@ namespace kookbox.core.Messaging
 
         public static void RegisterPayloadType(short messageType, byte version, Type payloadType)
         {
-            payloadTypes.Add(GetMessageKey(messageType, version), payloadType);   
+            var key = GetMessageKey(messageType, version);
+            payloadTypes.Add(key, payloadType);
         }
 
         public static Type GetPayloadType(short messageType, byte version)
@@ -41,7 +44,7 @@ namespace kookbox.core.Messaging
             return payloadType;
         }
 
-        private static uint GetMessageKey(short messageType, byte version)
+        internal static uint GetMessageKey(short messageType, byte version)
         {
             return ((uint)messageType << 16) + version;
         }
