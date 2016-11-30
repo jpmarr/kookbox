@@ -35,7 +35,6 @@ namespace kookbox.core.Messaging
                 creator = GenerateCreator(payload.GetType());
                 messageCreators.Add(key, creator);
             }
-
             return creator(correlationId, payload);
         }
 
@@ -44,24 +43,26 @@ namespace kookbox.core.Messaging
             var method = new DynamicMethod(
                 string.Empty,
                 typeof(INetworkMessage),
-                new[] { typeof(long?), payloadType },
+                new[] { typeof(long?), typeof(MessagePayload) },
                 CodeGenerationContext.DynamicModule,
                 true);
 
             var messageType = typeof(NetworkMessage<>).MakeGenericType(payloadType);
+            var ctor =
+                messageType.GetTypeInfo()
+                    .GetConstructor(new[] { typeof(short), typeof(byte), typeof(long?), payloadType });
             var attr = payloadType.GetTypeInfo().GetCustomAttribute<RegisteredPayloadAttribute>();
-
             var codeGen = method.GetILGenerator();
-            codeGen.Emit(OpCodes.Ldc_I4, attr.MessageType);
-            codeGen.Emit(OpCodes.Ldc_I4, attr.Version);
-            codeGen.Emit(OpCodes.Ldarg_0);
-            codeGen.Emit(OpCodes.Ldarg_1);
-            codeGen.Emit(OpCodes.Newobj, messageType.GetTypeInfo().GetConstructor(new[] { typeof(short), typeof(byte), typeof(long?), payloadType }));
-            codeGen.Emit(OpCodes.Castclass, typeof(INetworkMessage));
-            codeGen.Emit(OpCodes.Ret);
+            codeGen.Emit(OpCodes.Ldc_I4, (int)attr.MessageType); // push messageType onto stack as int32
+            codeGen.Emit(OpCodes.Ldc_I4, (int)attr.Version);     // push version onto stack as int32
+            codeGen.Emit(OpCodes.Ldarg_0);                       // push arg 0(correlationId) onto stack
+            codeGen.Emit(OpCodes.Ldarg_1);                       // push arg 1(payload) ont stack
+            codeGen.Emit(OpCodes.Castclass, payloadType);        // cast payload from base type to specific type
+            codeGen.Emit(OpCodes.Newobj, ctor);                  // call NetworkMessage<T> constructor
+            codeGen.Emit(OpCodes.Ret);                           // return
 
-            var creator = method.CreateDelegate(typeof(Func<long?, MessagePayload, INetworkMessage>));
-            return (Func<long?, MessagePayload, INetworkMessage>)creator;
+            return (Func<long?, MessagePayload, INetworkMessage>)method.CreateDelegate(
+                typeof(Func<long?, MessagePayload, INetworkMessage>));
         }
 
         private static class CodeGenerationContext

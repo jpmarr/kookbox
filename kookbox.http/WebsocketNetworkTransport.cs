@@ -13,6 +13,7 @@ using kookbox.core.Messaging;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace kookbox.http
 {
@@ -25,7 +26,11 @@ namespace kookbox.http
         private readonly byte[] writeBuffer = new byte[4096];
         private readonly byte[] readBuffer = new byte[4096];
         private readonly CancellationTokenSource cancellation = new CancellationTokenSource();
-        private readonly JsonSerializer serializer = JsonSerializer.CreateDefault();
+        private readonly JsonSerializer serializer = JsonSerializer.CreateDefault(
+            new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            });
         private readonly ActionBlock<INetworkMessage> messageQueue;
 
         public WebsocketNetworkTransport(HttpContext context)
@@ -53,8 +58,15 @@ namespace kookbox.http
 
         private async Task SendMessageAsync(INetworkMessage message)
         {
-            var payload = JsonConvert.SerializeObject(message);
-            var payloadLength = Encoding.UTF8.GetBytes(payload, 0, payload.Length, writeBuffer, 0);
+            int payloadLength;
+            // todo: reuse stream and writer??
+            using (var buffer = new MemoryStream(writeBuffer))
+            using (var writer = new StreamWriter(buffer, Encoding.UTF8))
+            {
+                serializer.Serialize(writer, message);
+                writer.Flush();
+                payloadLength = (int)buffer.Position;
+            }
 
             await socket.SendAsync(
                 new ArraySegment<byte>(writeBuffer, 0, payloadLength),
@@ -133,6 +145,7 @@ namespace kookbox.http
                                 correlationId = (long)correlationAsDecimal.Value;
                             break;
                         case "payload":
+                            reader.Read();
                             payloadJson = JObject.Load(reader);
                             break;
                         default:
@@ -144,9 +157,14 @@ namespace kookbox.http
             if (messageType == 0 || version == 0 || payloadJson == null)
                 return false;
 
-            var payloadType = MessageRegistry.GetPayloadType(messageType, version);
-            var payload = serializer.Deserialize(payloadJson.CreateReader(), payloadType) as MessagePayload;
-            message = MessageFactory.Create(messageType, version, correlationId, payload);
+            // todo: combine 2 hash lookups into 1 here
+            message = MessageFactory.Create(
+                messageType, 
+                version, 
+                correlationId,
+                (MessagePayload)serializer.Deserialize(
+                    payloadJson.CreateReader(),
+                    MessageRegistry.GetPayloadType(messageType, version)));
 
             return true;
         }

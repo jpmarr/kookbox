@@ -19,7 +19,7 @@ namespace kookbox.core.Messaging
             var registrations = 
                 from t in implementingAssembly.GetTypes()
                 let ti = t.GetTypeInfo()
-                where ti.IsSubclassOf(typeof(NetworkMessage))
+                where ti.IsSubclassOf(typeof(MessagePayload))
                 let attr = ti.GetCustomAttribute<RegisteredPayloadAttribute>()
                 where attr != null
                 select new {attr.MessageType, attr.Version, PayloadType = t};

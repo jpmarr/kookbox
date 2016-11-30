@@ -12,10 +12,15 @@ class KookboxApp extends React.Component<IKookboxAppProps, {}> {
 var socket = new WebSocket("ws://localhost:5000");
 socket.onopen = () => {
     console.log("socket opened");
+    socket.send(JSON.stringify({
+        messageType: 1,
+        version: 1,
+        payload: {
+        }
+    }));
 };
 socket.onmessage = msg => {
     console.log(msg.data);
-    return false;
 };
 socket.onerror = evt => {
     console.log(`error:${evt}`);

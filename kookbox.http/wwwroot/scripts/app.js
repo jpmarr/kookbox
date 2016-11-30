@@ -17,10 +17,14 @@ var KookboxApp = (function (_super) {
 var socket = new WebSocket("ws://localhost:5000");
 socket.onopen = function () {
     console.log("socket opened");
+    socket.send(JSON.stringify({
+        messageType: 1,
+        version: 1,
+        payload: {}
+    }));
 };
 socket.onmessage = function (msg) {
     console.log(msg.data);
-    return false;
 };
 socket.onerror = function (evt) {
     console.log("error:" + evt);
