@@ -20,7 +20,7 @@ namespace kookbox.core
         public Server()
         {
             //todo: right place for this???
-            MessageRegistry.RegisterPayloadTypesInAssembly(typeof(NetworkMessage).GetTypeInfo().Assembly);    
+            MessageFactory.RegisterPayloadTypesInAssembly(typeof(NetworkMessage).GetTypeInfo().Assembly);    
         }
 
         public void Start()

@@ -119,7 +119,8 @@ namespace kookbox.http
             JObject payloadJson = null;
             message = null;
 
-            using (var reader = new JsonTextReader(new StringReader(messageText)) {CloseInput = true})
+            using (var text = new StringReader(messageText))
+            using (var reader = new JsonTextReader(text) {CloseInput = true})
             {
                 while (reader.Read())
                 {
@@ -157,14 +158,12 @@ namespace kookbox.http
             if (messageType == 0 || version == 0 || payloadJson == null)
                 return false;
 
-            // todo: combine 2 hash lookups into 1 here
-            message = MessageFactory.Create(
-                messageType, 
-                version, 
+            var payloadRegistration = MessageFactory.GetPayloadRegistration(messageType, version);
+            message = payloadRegistration.CreateMessage(
                 correlationId,
                 (MessagePayload)serializer.Deserialize(
                     payloadJson.CreateReader(),
-                    MessageRegistry.GetPayloadType(messageType, version)));
+                    payloadRegistration.PayloadType));
 
             return true;
         }

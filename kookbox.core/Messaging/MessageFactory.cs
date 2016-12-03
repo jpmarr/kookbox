@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Threading.Tasks;
 using kookbox.core.Interfaces;
 using kookbox.core.Messaging.Payloads;
 
@@ -13,7 +12,8 @@ namespace kookbox.core.Messaging
 
     public static class MessageFactory
     {
-        private static readonly Dictionary<uint, MessageCreator> messageCreators = new Dictionary<uint, MessageCreator>();
+        private static readonly Dictionary<uint, PayloadRegistration> payloadsByKey = new Dictionary<uint, PayloadRegistration>();
+        private static readonly Dictionary<Type, PayloadRegistration> payloadsByType = new Dictionary<Type, PayloadRegistration>();
 
         public static INetworkMessage ConnectionResponse()
         {
@@ -26,56 +26,103 @@ namespace kookbox.core.Messaging
             return NetworkMessage.Create(new TrackStarted(room, track));
         }
 
-        public static INetworkMessage Create(short messageType, byte version, long? correlationId, MessagePayload payload)
+        public static PayloadRegistration GetPayloadRegistration(short messageType, byte version)
         {
-            var key = MessageRegistry.GetMessageKey(messageType, version);
-            MessageCreator creator;
-            if (!messageCreators.TryGetValue(key, out creator))
-            {
-                creator = GenerateCreator(payload.GetType());
-                messageCreators.Add(key, creator);
-            }
-            return creator(correlationId, payload);
+            PayloadRegistration registration;
+            if (!payloadsByKey.TryGetValue(GetPayloadKey(messageType, version), out registration))
+                throw new ArgumentException($"Unable to located a registered payload type for messsage type {messageType} (v{version})");
+            return registration;
         }
 
-        private static Func<long?, MessagePayload, INetworkMessage> GenerateCreator(Type payloadType)
+        public static void RegisterPayloadTypesInAssembly(Assembly implementingAssembly)
         {
-            var method = new DynamicMethod(
-                string.Empty,
-                typeof(INetworkMessage),
-                new[] { typeof(long?), typeof(MessagePayload) },
-                CodeGenerationContext.DynamicModule,
-                true);
+            if (implementingAssembly == null)
+                throw new ArgumentNullException(nameof(implementingAssembly));
 
-            var messageType = typeof(NetworkMessage<>).MakeGenericType(payloadType);
-            var ctor =
-                messageType.GetTypeInfo()
-                    .GetConstructor(new[] { typeof(short), typeof(byte), typeof(long?), payloadType });
-            var attr = payloadType.GetTypeInfo().GetCustomAttribute<RegisteredPayloadAttribute>();
-            var codeGen = method.GetILGenerator();
-            codeGen.Emit(OpCodes.Ldc_I4, (int)attr.MessageType); // push messageType onto stack as int32
-            codeGen.Emit(OpCodes.Ldc_I4, (int)attr.Version);     // push version onto stack as int32
-            codeGen.Emit(OpCodes.Ldarg_0);                       // push arg 0(correlationId) onto stack
-            codeGen.Emit(OpCodes.Ldarg_1);                       // push arg 1(payload) ont stack
-            codeGen.Emit(OpCodes.Castclass, payloadType);        // cast payload from base type to specific type
-            codeGen.Emit(OpCodes.Newobj, ctor);                  // call NetworkMessage<T> constructor
-            codeGen.Emit(OpCodes.Ret);                           // return
+            var registrations =
+                from t in implementingAssembly.GetTypes()
+                let ti = t.GetTypeInfo()
+                where ti.IsSubclassOf(typeof(MessagePayload))
+                let attr = ti.GetCustomAttribute<RegisteredPayloadAttribute>()
+                where attr != null
+                select new { attr.MessageType, attr.Version, PayloadType = t };
 
-            return (Func<long?, MessagePayload, INetworkMessage>)method.CreateDelegate(
-                typeof(Func<long?, MessagePayload, INetworkMessage>));
+            foreach (var registration in registrations)
+                RegisterPayloadType(registration.MessageType, registration.Version, registration.PayloadType);
         }
 
-        private static class CodeGenerationContext
+        public static void RegisterPayloadType(short messageType, byte version, Type payloadType)
         {
-            static CodeGenerationContext()
+            var registration = new PayloadRegistration(messageType, version, payloadType);
+            payloadsByKey.Add(GetPayloadKey(messageType, version), registration);
+            payloadsByType.Add(payloadType, registration);
+        }
+
+        private static uint GetPayloadKey(short messageType, byte version)
+        {
+            return ((uint)messageType << 16) + version;
+        }
+
+        public class PayloadRegistration
+        {
+            private readonly MessageCreator creator;
+
+            public PayloadRegistration(short messageType, byte version, Type payloadType)
             {
-                var builder = AssemblyBuilder.DefineDynamicAssembly(
-                    new AssemblyName("kookbox.core.Emit"),
-                    AssemblyBuilderAccess.Run);
-                DynamicModule = builder.DefineDynamicModule("EmitModule");
+                MessageType = messageType;
+                Version = version;
+                PayloadType = payloadType;
+                creator = GenerateCreator(payloadType);
             }
 
-            public static ModuleBuilder DynamicModule { get; }
+            public short MessageType { get; }
+            public short Version { get; }
+            public Type PayloadType { get; }
+
+            public INetworkMessage CreateMessage(long? correlationId, MessagePayload payload)
+            {
+                return creator(correlationId, payload);
+            }
+
+            private static Func<long?, MessagePayload, INetworkMessage> GenerateCreator(Type payloadType)
+            {
+                var method = new DynamicMethod(
+                    string.Empty,
+                    typeof(INetworkMessage),
+                    new[] { typeof(long?), typeof(MessagePayload) },
+                    CodeGenerationContext.DynamicModule,
+                    true);
+
+                var messageType = typeof(NetworkMessage<>).MakeGenericType(payloadType);
+                var ctor =
+                    messageType.GetTypeInfo()
+                        .GetConstructor(new[] { typeof(short), typeof(byte), typeof(long?), payloadType });
+                var attr = payloadType.GetTypeInfo().GetCustomAttribute<RegisteredPayloadAttribute>();
+                var codeGen = method.GetILGenerator();
+                codeGen.Emit(OpCodes.Ldc_I4, (int)attr.MessageType); // push messageType onto stack as int32
+                codeGen.Emit(OpCodes.Ldc_I4, (int)attr.Version);     // push version onto stack as int32
+                codeGen.Emit(OpCodes.Ldarg_0);                       // push arg 0(correlationId) onto stack
+                codeGen.Emit(OpCodes.Ldarg_1);                       // push arg 1(payload) ont stack
+                codeGen.Emit(OpCodes.Castclass, payloadType);        // cast payload from base type to specific type
+                codeGen.Emit(OpCodes.Newobj, ctor);                  // call NetworkMessage<T> constructor
+                codeGen.Emit(OpCodes.Ret);                           // return
+
+                return (Func<long?, MessagePayload, INetworkMessage>)method.CreateDelegate(
+                    typeof(Func<long?, MessagePayload, INetworkMessage>));
+            }
+
+            private static class CodeGenerationContext
+            {
+                static CodeGenerationContext()
+                {
+                    var builder = AssemblyBuilder.DefineDynamicAssembly(
+                        new AssemblyName("kookbox.core.Emit"),
+                        AssemblyBuilderAccess.Run);
+                    DynamicModule = builder.DefineDynamicModule("EmitModule");
+                }
+
+                public static ModuleBuilder DynamicModule { get; }
+            }
         }
     }
 }
