@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using kookbox.core.Interfaces;
+using kookbox.core.Messaging.DTO;
 using kookbox.core.Messaging.Payloads;
 
 namespace kookbox.core.Messaging
@@ -15,9 +16,9 @@ namespace kookbox.core.Messaging
         private static readonly Dictionary<uint, PayloadRegistration> payloadsByKey = new Dictionary<uint, PayloadRegistration>();
         private static readonly Dictionary<Type, PayloadRegistration> payloadsByType = new Dictionary<Type, PayloadRegistration>();
 
-        public static INetworkMessage ConnectionResponse()
+        public static INetworkMessage ConnectionResponse(RoomInfo activeRoom)
         {
-            return NetworkMessage.Create(new ConnectionResponse());
+            return NetworkMessage.Create(new ConnectionResponse(activeRoom));
         }
 
         // todo: consider pools for these message classes...

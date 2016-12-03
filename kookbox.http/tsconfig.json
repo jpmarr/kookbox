@@ -7,11 +7,13 @@
     "noEmitOnError": true,
     "noImplicitAny": true,
     "sourceMap": true,
-    "target": "es5"
+    "target": "es5",
+    "strictNullChecks": true
   },
   "files": [
     "./typings/react/react.d.ts",
     "./typings/react/reactdom.d.ts",
+    "./wwwroot/scripts/KookboxClient.ts",
     "./wwwroot/scripts/app.tsx"
   ]
 }

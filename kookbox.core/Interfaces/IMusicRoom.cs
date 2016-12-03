@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
@@ -23,6 +24,8 @@ namespace kookbox.core.Interfaces
 
         Task OpenAsync();
         Task CloseAsync();
+
+        IMusicRoomListener ConnectListener(IMusicListener listener);
 
         Task PlayAsync();
         Task PauseAsync();

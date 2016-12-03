@@ -1,4 +1,6 @@
 ﻿/// <reference path="../../typings/react/react.d.ts" />
+/// <reference path="kookboxclient.ts" />
+
 interface IKookboxAppProps {
     test: string;
 }
@@ -9,22 +11,6 @@ class KookboxApp extends React.Component<IKookboxAppProps, {}> {
     }
 }
 
-var socket = new WebSocket("ws://localhost:5000");
-socket.onopen = () => {
-    console.log("socket opened");
-    socket.send(JSON.stringify({
-        messageType: 1,
-        version: 1,
-        payload: {
-        }
-    }));
-};
-socket.onmessage = msg => {
-    console.log(msg.data);
-};
-socket.onerror = evt => {
-    console.log(`error:${evt}`);
-};
-socket.onclose = () => {
-    console.log("socket closed");
-};
+let client = new KookboxClient("ws://localhost:5000");
+client.connect();  
+

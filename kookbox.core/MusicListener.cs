@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Xml;
 using kookbox.core.Interfaces;
 
 namespace kookbox.core
@@ -26,10 +25,7 @@ namespace kookbox.core
         public MusicListener(IMusicServer server, string name, INetworkTransport transport)
             : this(server, name)
         {
-            if (transport == null)
-                throw new ArgumentNullException(nameof(transport));
-
-            transports.Add(transport);
+            AddTransport(transport);
         }
 
         public void AddTransport(INetworkTransport transport)
@@ -37,14 +33,34 @@ namespace kookbox.core
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));
 
-            transports.Add(transport);
+            transport.ReceivedMessages.Subscribe(
+                HandleTransportMessage,
+                () => HandleTransportComplete(transport));
+
+            lock (transports)
+                transports.Add(transport);
         }
 
+        public string Id { get; }
         public string Name { get; }
         public bool IsConnected => transports.Any();
-        public Option<IMusicRoom> ActiveRoom { get; }
+        public Option<IMusicRoom> ActiveRoom { get; set; }
         public Option<IBan> Ban { get; }
         public IEnumerable<IMusicListenerRole> ServerRoles { get; }
         public IEnumerable<INetworkTransport> Transports => transports;
+
+        private void HandleTransportMessage(INetworkMessage message)
+        {
+            Debug.WriteLine($"message recvd: {message}");
+        }
+
+        private void HandleTransportComplete(INetworkTransport transport)
+        {
+            Debug.WriteLine($"Detaching transport: {transport}");
+            lock (transports)
+                transports.Remove(transport);
+
+            (transport as IDisposable)?.Dispose();
+        }
     }
 }

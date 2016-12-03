@@ -14,6 +14,8 @@ namespace kookbox.core
         {
             this.room = room;
             Listener = listener;
+
+            listener.ActiveRoom = Option.Create(room);
         }
 
         public IMusicListener Listener { get; }

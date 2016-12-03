@@ -5,6 +5,7 @@ using System.Reflection;
 using kookbox.core.Interfaces;
 using System.Threading.Tasks;
 using kookbox.core.Messaging;
+using kookbox.core.Messaging.DTO;
 
 namespace kookbox.core
 {
@@ -80,6 +81,12 @@ namespace kookbox.core
                     listener = new MusicListener(this, username, transport);
                     connectedListeners.Add(listener);
                 });
+
+            //todo: get listener defautl room
+            var room = rooms.First();
+            room.ConnectListener(listener);
+
+            transport.QueueMessage(MessageFactory.ConnectionResponse(RoomInfo.FromRoom(room)));
 
             return Task.FromResult(listener);
         }

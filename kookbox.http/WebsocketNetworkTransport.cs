@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.WebSockets;
 using System.Reactive.Subjects;
 using System.Text;
@@ -17,7 +15,9 @@ using Newtonsoft.Json.Serialization;
 
 namespace kookbox.http
 {
-    internal class WebsocketNetworkTransport : INetworkTransport
+    internal class WebsocketNetworkTransport : 
+        INetworkTransport,
+        IDisposable
     {
         private readonly HttpContext context;
         private WebSocket socket;
@@ -26,6 +26,7 @@ namespace kookbox.http
         private readonly byte[] writeBuffer = new byte[4096];
         private readonly byte[] readBuffer = new byte[4096];
         private readonly CancellationTokenSource cancellation = new CancellationTokenSource();
+        private readonly Encoding utf8NoBom = new UTF8Encoding(false);
         private readonly JsonSerializer serializer = JsonSerializer.CreateDefault(
             new JsonSerializerSettings
             {
@@ -45,8 +46,13 @@ namespace kookbox.http
         public async Task OpenAsync()
         {
             socket = await context.WebSockets.AcceptWebSocketAsync();
-            QueueMessage(MessageFactory.ConnectionResponse());
             await BeginReceive();
+        }
+
+        public async Task CloseAsync()
+        {
+            if (socket.State == WebSocketState.Open)
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Server initiated close", cancellation.Token);
         }
 
         public void QueueMessage(INetworkMessage message)
@@ -61,7 +67,7 @@ namespace kookbox.http
             int payloadLength;
             // todo: reuse stream and writer??
             using (var buffer = new MemoryStream(writeBuffer))
-            using (var writer = new StreamWriter(buffer, Encoding.UTF8))
+            using (var writer = new StreamWriter(buffer, utf8NoBom))
             {
                 serializer.Serialize(writer, message);
                 writer.Flush();
@@ -82,16 +88,22 @@ namespace kookbox.http
             {
                 var result = await socket.ReceiveAsync(
                     new ArraySegment<byte>(readBuffer, offset, readBuffer.Length - offset),
-                    CancellationToken.None);
+                    cancellation.Token);
+
+                if (socket.State != WebSocketState.Open)
+                    break;
 
                 if (result.EndOfMessage)
                 {
-                    var messageText = Encoding.UTF8.GetString(readBuffer, 0, offset + result.Count);
+                    var messageText = utf8NoBom.GetString(readBuffer, 0, offset + result.Count);
                     INetworkMessage message;
                     if (TryParseNetworkMessage(messageText, out message))
                         messageSink.OnNext(message);
                     else
-                        throw new InvalidOperationException("Unable to parse message type");
+                        await socket.CloseAsync(
+                            WebSocketCloseStatus.InvalidPayloadData, 
+                            "Unable to parse message type",
+                            cancellation.Token);
 
                     offset = 0;
                 }
@@ -147,6 +159,7 @@ namespace kookbox.http
                             break;
                         case "payload":
                             reader.Read();
+                            // todo: better solution to this???
                             payloadJson = JObject.Load(reader);
                             break;
                         default:
@@ -166,6 +179,22 @@ namespace kookbox.http
                     payloadRegistration.PayloadType));
 
             return true;
+        }
+
+        protected void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                messageSink.Dispose();
+                socket.Dispose();
+                cancellation.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

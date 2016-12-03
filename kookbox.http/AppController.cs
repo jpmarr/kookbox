@@ -16,6 +16,7 @@ namespace kookbox.http
                     "<head>" +
                         "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/react/0.14.6/react.min.js\" type=\"text/javascript\"></script>" +
                         "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/react/0.14.6/react-dom.min.js\" type=\"text/javascript\"></script>" +
+                        "<script src=\"/scripts/KookboxClient.js\" type=\"text/javascript\"></script>" +
                         "<script src=\"/scripts/app.js\" type=\"text/javascript\"></script>" +
                     "</head>" +
                     "<body>" +

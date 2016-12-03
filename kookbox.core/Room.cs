@@ -100,6 +100,14 @@ namespace kookbox.core
             await PauseAsync();
         }
 
+        public IMusicRoomListener ConnectListener(IMusicListener listener)
+        {
+            var roomListener = new RoomListener(this, listener);
+            listeners.Add(roomListener);
+
+            return roomListener;
+        }
+
         public async Task PlayAsync()
         {
             CurrentTrack.IfHasValue(async track => await PlayTrackAsync(track));   
