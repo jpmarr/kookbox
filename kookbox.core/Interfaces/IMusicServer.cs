@@ -8,10 +8,14 @@ namespace kookbox.core.Interfaces
         IMusicSources Sources { get; }
         IEnumerable<IMusicListener> ConnectedListeners { get; }
         IEnumerable<IMusicRoom> Rooms { get; }
+        IMusicSecurity Security { get; }
 
-        void Start();
+        // todo: shared/public playback 'zones' - registered by sources (may be multiple sonos zones for example)
+        // a room can be asigned to a zone - vote to switch the room in a zone etc.
 
-        Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name);
+        Task StartAsync();
+        Task StopAsync();
+
         /// <summary>
         /// connect a new user or establish a new network transport for an already connected listener
         /// </summary>

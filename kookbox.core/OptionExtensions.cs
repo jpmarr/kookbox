@@ -23,5 +23,16 @@ namespace kookbox.core
             if (!option.HasValue)
                 action();
         }
+
+        public static bool TryGetValue<T>(this Option<T> option, out T value)
+        {
+            if (option.HasValue)
+            {
+                value = option.ValueOr(default(T));
+                return true;
+            }
+            value = default(T);
+            return false;
+        }
     }
 }

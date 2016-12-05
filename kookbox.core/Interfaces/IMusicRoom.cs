@@ -18,17 +18,10 @@ namespace kookbox.core.Interfaces
         Option<IQueuedMusicTrack> CurrentTrack { get; }
         IMusicQueue UpcomingQueue { get; }
         IEnumerable<IMusicRoomListener> Listeners { get; }
+        IMusicSecurity Security { get; }
 
         IEnumerable<IQueuedMusicTrack> GetTrackHistory(int count);
         RoomState State { get; }
-
-        Task OpenAsync();
-        Task CloseAsync();
-
-        IMusicRoomListener ConnectListener(IMusicListener listener);
-
-        Task PlayAsync();
-        Task PauseAsync();
     }
 
     public enum RoomState

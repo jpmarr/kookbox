@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using kookbox.core.Interfaces;
 using kookbox.core.Interfaces.Serialisation;
@@ -8,9 +9,11 @@ using kookbox.core.Messaging;
 
 namespace kookbox.core
 {
+    // todo: remove all actions from the room iteself and move to room listener so they are all done in the context of a specific user only - this allows for cleaner security management
     public class Room : IMusicRoom
     {
         private readonly IMusicServer server;
+        private readonly IMusicSecurity security = new MusicSecurity();
         private readonly int upcomingMinimumCount = 20;
         private readonly List<IMusicRoomListener> listeners = new List<IMusicRoomListener>();
         private readonly IMusicQueue queue = new MusicQueue();
@@ -58,6 +61,7 @@ namespace kookbox.core
         public string Id { get; }
         public string Name { get; }
         public IMusicListener Creator { get; }
+        public IMusicSecurity Security { get; }
         
         //todo: multiple sources??? legal to have no -source from a 'request-only' room?
         public Option<IMusicPlaylistSource> DefaultTrackSource { get; set; }
@@ -102,10 +106,35 @@ namespace kookbox.core
 
         public IMusicRoomListener ConnectListener(IMusicListener listener)
         {
-            var roomListener = new RoomListener(this, listener);
-            listeners.Add(roomListener);
+            if (listener == null)
+                throw new ArgumentNullException(nameof(listener));
+
+            security.CheckListenerHasPermission(listener, Permission.Connect, Option.Create(this));
+
+            // add this listener if they're not already in the list
+            IMusicRoomListener roomListener;
+            lock (listeners)
+                roomListener = listeners.FirstOrDefault(l => l.Listener == listener);
+
+            if (roomListener == null)
+            {
+                roomListener = new RoomListener(this, listener);
+                lock (listeners)
+                    listeners.Add(roomListener);
+            }
 
             return roomListener;
+        }
+
+        public void DisconnectListener(IMusicRoomListener roomListener)
+        {
+            if (roomListener.Room != this)
+                throw new ArgumentException("listener is not for this room");
+
+            lock (listeners)
+                listeners.Remove(roomListener);
+
+            roomListener.Listener.ConnectToRoom(Option<IMusicRoom>.None());
         }
 
         public async Task PlayAsync()

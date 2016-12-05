@@ -18,6 +18,7 @@ namespace kookbox.core
             listener.ActiveRoom = Option.Create(room);
         }
 
+        public IMusicRoom Room { get; }
         public IMusicListener Listener { get; }
         public bool IsConnected { get; }
         public IEnumerable<IMusicListenerRole> RoomRoles { get; }

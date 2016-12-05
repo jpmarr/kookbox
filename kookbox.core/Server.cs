@@ -13,10 +13,7 @@ namespace kookbox.core
     {
         private readonly List<IMusicRoom> rooms = new List<IMusicRoom>();
         private readonly List<IMusicListener> connectedListeners = new List<IMusicListener>();
-
-        public IMusicSources Sources { get; } = new MusicSources();
-        public IEnumerable<IMusicListener> ConnectedListeners => connectedListeners;
-        public IEnumerable<IMusicRoom> Rooms => rooms;
+        private readonly IMusicSecurity security = new MusicSecurity();
 
         public Server()
         {
@@ -24,7 +21,12 @@ namespace kookbox.core
             MessageFactory.RegisterPayloadTypesInAssembly(typeof(NetworkMessage).GetTypeInfo().Assembly);    
         }
 
-        public void Start()
+        public IMusicSources Sources { get; } = new MusicSources();
+        public IEnumerable<IMusicListener> ConnectedListeners => connectedListeners;
+        public IEnumerable<IMusicRoom> Rooms => rooms;
+        public IMusicSecurity Security => security;
+
+        public Task StartAsync()
         {
             // todo: deserialize any state here    
 
@@ -45,6 +47,11 @@ namespace kookbox.core
             room.OpenAsync().Wait();
         }
 
+        public Task StopAsync()
+        {
+            
+        }
+
         public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)
         {
             if (creator == null)
@@ -52,11 +59,10 @@ namespace kookbox.core
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
+            security.CheckListenerHasPermission(creator, Permission.CreateRoom, Option.Create(this));
+
             var room = new Room(this, creator, name);
             rooms.Add(room);
-
-            // todo: room created...
-            SendMessageToAllListeners(null);
 
             return Task.FromResult<IMusicRoom>(room);
         }
@@ -68,21 +74,17 @@ namespace kookbox.core
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));
 
-            IMusicListener listener = null;
-            var maybeListener = GetListener(username);
-            maybeListener
-                .IfHasValue(l =>
-                {
-                    l.AddTransport(transport);
-                    listener = l;
-                })
-                .Else(() =>
-                {
-                    listener = new MusicListener(this, username, transport);
-                    connectedListeners.Add(listener);
-                });
+            IMusicListener listener;
+            if (GetListener(username).TryGetValue(out listener))
+                listener.AddTransport(transport);
+            else
+            {
+                listener = new MusicListener(this, username, transport);
+                security.CheckListenerHasPermission(listener, Permission.Connect, Option.Create(this));
+                connectedListeners.Add(listener);
+            };
 
-            //todo: get listener defautl room
+            //todo: get listener default room
             var room = rooms.First();
             room.ConnectListener(listener);
 
