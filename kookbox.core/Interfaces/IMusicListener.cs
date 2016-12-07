@@ -17,7 +17,7 @@ namespace kookbox.core.Interfaces
         Task DisconnectAsync(INetworkTransport transport);
         Task DisconnectAsync();
 
-        Task<IMusicRoomListener> ConnectToRoomAsync(Option<IMusicRoom> room);
+        Task<IMusicRoomListener> ConnectToRoomAsync(IMusicRoom room);
         Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name);
 
         Task StartListenerBanPollAsync(IMusicListener listener);

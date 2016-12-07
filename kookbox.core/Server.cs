@@ -26,7 +26,7 @@ namespace kookbox.core
         public IEnumerable<IMusicRoom> Rooms => rooms;
         public IMusicSecurity Security => security;
 
-        public Task StartAsync()
+        public async Task StartAsync()
         {
             // todo: deserialize any state here    
 
@@ -34,7 +34,7 @@ namespace kookbox.core
             var listener = new MusicListener(this, "jim");
             connectedListeners.Add(listener);
 
-            var room = CreateRoomAsync(listener, "Test Room").Result;
+            var room = await CreateRoomAsync(listener, "Test Room");
             var source = Sources.First();
 
             IMusicPlaylistSource playlist = null;
@@ -44,7 +44,8 @@ namespace kookbox.core
 
             room.DefaultTrackSource = Option.Some(playlist);
 
-            room.OpenAsync().Wait();
+            listener.ConnectToRoomAsync(room)
+            await room.OpenAsync();
         }
 
         public Task StopAsync()

@@ -116,22 +116,21 @@ namespace kookbox.core
             // disconnect from server/send notification
         }
 
-        public async Task<IMusicRoomListener> ConnectToRoomAsync(Option<IMusicRoom> room)
+        public async Task<IMusicRoomListener> ConnectToRoomAsync(IMusicRoom room)
         {
-            IMusicRoom r;
-            if (room.TryGetValue(out r))
+            if (room == null)
+                throw new ArgumentNullException();
+
+            IMusicRoomListener rl;
+            if (roomListener.TryGetValue(out rl))
             {
-                IMusicRoomListener rl;
-                if (roomListener.TryGetValue(out rl))
-                {
-                    if (r == rl.Room)
-                        return rl; //todo: or throw?
-                    await rl.DisconnectAsync();
-                }
-                roomListener = Option.Create(r. ConnectListener(this));
+                if (room == rl.Room)
+                    return rl; //todo: or throw?
+                await rl.DisconnectAsync();
             }
-            else
-                roomListener.IfHasValue(rl => rl.Room.DisconnectListener(this));
+
+
+            roomListener = Option.Create(r. ConnectListener(this));
         }
 
         public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)
