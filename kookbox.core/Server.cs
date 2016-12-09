@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using kookbox.core.Interfaces;
 using System.Threading.Tasks;
+using kookbox.core.Interfaces.Internal;
 using kookbox.core.Messaging;
 using kookbox.core.Messaging.DTO;
 
@@ -11,7 +12,7 @@ namespace kookbox.core
 {
     public class Server : IMusicServer
     {
-        private readonly List<IMusicRoom> rooms = new List<IMusicRoom>();
+        private readonly List<IMusicRoomController> rooms = new List<IMusicRoomController>();
         private readonly List<IMusicListener> connectedListeners = new List<IMusicListener>();
         private readonly IMusicSecurity security = new MusicSecurity();
 
@@ -31,7 +32,7 @@ namespace kookbox.core
             // todo: deserialize any state here    
 
             // todo: temp - this will loaded from state storage
-            var listener = new MusicListener(this, "jim");
+            var listener = new MusicListener(this, "jim") as IMusicListener;
             connectedListeners.Add(listener);
 
             var room = await CreateRoomAsync(listener, "Test Room");
@@ -44,13 +45,13 @@ namespace kookbox.core
 
             room.DefaultTrackSource = Option.Some(playlist);
 
-            listener.ConnectToRoomAsync(room)
-            await room.OpenAsync();
+            var roomListener = await listener.ConnectToRoomAsync(room);
+            await roomListener.OpenRoomAsync();
         }
 
         public Task StopAsync()
         {
-            
+            return null;
         }
 
         public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)
@@ -68,7 +69,7 @@ namespace kookbox.core
             return Task.FromResult<IMusicRoom>(room);
         }
 
-        public Task<IMusicListener> ConnectListenerAsync(string username, INetworkTransport transport)
+        public async Task<IMusicListener> ConnectListenerAsync(string username, INetworkTransport transport)
         {
             if (username == null)
                 throw new ArgumentNullException(nameof(username));
@@ -77,7 +78,7 @@ namespace kookbox.core
 
             IMusicListener listener;
             if (GetListener(username).TryGetValue(out listener))
-                listener.AddTransport(transport);
+                await listener.ConnectAsync(transport);
             else
             {
                 listener = new MusicListener(this, username, transport);
@@ -87,11 +88,11 @@ namespace kookbox.core
 
             //todo: get listener default room
             var room = rooms.First();
-            room.ConnectListener(listener);
+            await listener.ConnectToRoomAsync(room);
 
             transport.QueueMessage(MessageFactory.ConnectionResponse(RoomInfo.FromRoom(room)));
 
-            return Task.FromResult(listener);
+            return listener;
         }
 
         public Task<IEnumerable<IMusicListener>> GetListenersAsync(Paging paging)

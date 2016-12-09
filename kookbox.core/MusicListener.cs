@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using kookbox.core.Interfaces;
+using kookbox.core.Interfaces.Internal;
 
 namespace kookbox.core
 {
@@ -124,13 +125,17 @@ namespace kookbox.core
             IMusicRoomListener rl;
             if (roomListener.TryGetValue(out rl))
             {
+                // if we're already connected to this room, return the existing room listener
                 if (room == rl.Room)
                     return rl; //todo: or throw?
+                // if we're changing rooms, dosconnect from the current room
                 await rl.DisconnectAsync();
             }
 
+            rl = new RoomListener(room, room as IMusicRoomController, this);
+            roomListener = Option.Create(rl);
 
-            roomListener = Option.Create(r. ConnectListener(this));
+            return rl;
         }
 
         public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)

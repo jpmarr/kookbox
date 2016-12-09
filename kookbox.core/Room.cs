@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using kookbox.core.Interfaces;
+using kookbox.core.Interfaces.Internal;
 using kookbox.core.Interfaces.Serialisation;
 using kookbox.core.Messaging;
 
 namespace kookbox.core
 {
-    // todo: remove all actions from the room iteself and move to room listener so they are all done in the context of a specific user only - this allows for cleaner security management
-    public class Room : IMusicRoom
+    // todo: remove all actions from the room itself and move to room listener so 
+    // they are all done in the context of a specific user only - this allows for cleaner security management
+    internal class Room : IMusicRoomController
     {
         private readonly IMusicServer server;
         private readonly IMusicSecurity security = new MusicSecurity();
@@ -54,8 +55,6 @@ namespace kookbox.core
 
             Creator = creator;
             Name = name;
-
-            listeners.Add(new RoomListener(this, creator));
         }
 
         public string Id { get; }
@@ -91,19 +90,6 @@ namespace kookbox.core
             }
         }
 
-        public async Task OpenAsync()
-        {
-            if (!CurrentTrack.HasValue)
-                await InitialiseRoom();
-
-            await PlayAsync();
-        }
-
-        public async Task CloseAsync()
-        {
-            await PauseAsync();
-        }
-
         public IMusicRoomListener ConnectListener(IMusicListener listener)
         {
             if (listener == null)
@@ -118,7 +104,7 @@ namespace kookbox.core
 
             if (roomListener == null)
             {
-                roomListener = new RoomListener(this, listener);
+                roomListener = new RoomListener(this, this, listener);
                 lock (listeners)
                     listeners.Add(roomListener);
             }
@@ -150,6 +136,19 @@ namespace kookbox.core
         public IEnumerable<IQueuedMusicTrack> GetTrackHistory(int count)
         {
             throw new NotImplementedException();
+        }
+
+        async Task IMusicRoomController.OpenAsync()
+        {
+            if (!CurrentTrack.HasValue)
+                await InitialiseRoom();
+
+            await PlayAsync();
+        }
+
+        async Task IMusicRoomController.CloseAsync()
+        {
+            await PauseAsync();
         }
 
         private async Task PlayTrackAsync(IQueuedMusicTrack queued)

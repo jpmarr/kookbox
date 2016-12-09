@@ -20,7 +20,7 @@ namespace kookbox
         {
             IMusicServer server = new Server();
             server.Sources.RegisterMusicSource(new MockMusicSource());
-            server.Start();
+            server.StartAsync();
 
             var http = new KookboxHttpServer(server);
             http.Start();
