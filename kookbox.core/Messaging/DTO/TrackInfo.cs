@@ -14,7 +14,7 @@ namespace kookbox.core.Messaging.DTO
             Artist = artist;
         }
 
-        public static TrackInfo FromTrack(IMusicTrack track)
+        public static TrackInfo FromTrack(ITrack track)
         {
             return new TrackInfo(
                 track.Id, 

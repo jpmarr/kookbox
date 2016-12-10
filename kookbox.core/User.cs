@@ -9,14 +9,14 @@ using kookbox.core.Interfaces.Internal;
 
 namespace kookbox.core
 {
-    internal class MusicListener : IMusicListener
+    internal class User : IUser
     {
-        private readonly IMusicServer server;
+        private readonly IServerController server;
         private readonly List<INetworkTransport> transports = new List<INetworkTransport>();
-        private Option<IMusicRoomListener> roomListener;
+        private Option<IRoomUser> roomUser;
         private int isDisconnecting;
 
-        public MusicListener(IMusicServer server, string name)
+        public User(IServerController server, string name)
         {
             if (server == null)
                 throw new ArgumentNullException(nameof(server));
@@ -27,7 +27,7 @@ namespace kookbox.core
             Name = name;
         }
 
-        public MusicListener(IMusicServer server, string name, INetworkTransport transport)
+        public User(IServerController server, string name, INetworkTransport transport)
             : this(server, name)
         {
             AddTransport(transport);
@@ -64,19 +64,19 @@ namespace kookbox.core
             }
         }
 
-        public Option<IMusicRoom> ActiveRoom
+        public Option<IRoom> ActiveRoom
         {
             get
             {
-                IMusicRoomListener rl;
-                return roomListener.TryGetValue(out rl) ? 
-                    Option.Create(rl.Room) : 
-                    Option<IMusicRoom>.None();
+                IRoomUser ru;
+                return roomUser.TryGetValue(out ru) ? 
+                    Option.Create(ru.Room) : 
+                    Option<IRoom>.None();
             }
         }
 
         public Option<IBan> Ban { get; }
-        public IEnumerable<IMusicListenerRole> ServerRoles { get; }
+        public IEnumerable<IUserRole> ServerRoles { get; }
         public IEnumerable<INetworkTransport> Transports => transports;
 
         public Task ConnectAsync(INetworkTransport transport)
@@ -117,43 +117,43 @@ namespace kookbox.core
             // disconnect from server/send notification
         }
 
-        public async Task<IMusicRoomListener> ConnectToRoomAsync(IMusicRoom room)
+        public async Task<IRoomUser> ConnectToRoomAsync(IRoom room)
         {
             if (room == null)
                 throw new ArgumentNullException();
 
-            IMusicRoomListener rl;
-            if (roomListener.TryGetValue(out rl))
+            IRoomUser ru;
+            if (roomUser.TryGetValue(out ru))
             {
                 // if we're already connected to this room, return the existing room listener
-                if (room == rl.Room)
-                    return rl; //todo: or throw?
+                if (room == ru.Room)
+                    return ru; //todo: or throw?
                 // if we're changing rooms, dosconnect from the current room
-                await rl.DisconnectAsync();
+                await ru.DisconnectAsync();
             }
 
-            rl = new RoomListener(room, room as IMusicRoomController, this);
-            roomListener = Option.Create(rl);
+            ru = server.GetRoom(room.Id)?.ConnectUser(this);
+            roomUser = Option.Create(ru);
 
-            return rl;
+            return ru;
         }
 
-        public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)
+        public Task<IRoom> CreateRoomAsync(IUser creator, string name)
         {
             throw new NotImplementedException();
         }
 
-        public Task StartListenerBanPollAsync(IMusicListener listener)
+        public Task StartListenerBanPollAsync(IUser listener)
         {
             throw new NotImplementedException();
         }
 
-        public Task StartRoomSwitchPollAsync(IMusicRoom newRoom)
+        public Task StartRoomSwitchPollAsync(IRoom newRoom)
         {
             throw new NotImplementedException();
         }
 
-        public Task StartRoomBanPollAsync(IMusicRoom room)
+        public Task StartRoomBanPollAsync(IRoom room)
         {
             throw new NotImplementedException();
         }

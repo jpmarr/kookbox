@@ -5,9 +5,14 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces.Internal
 {
-    internal interface IMusicRoomController : IMusicRoom
+    internal interface IRoomController : IRoom
     {
+        IRoomUser ConnectUser(IUser listener);
+        void DisconnectUser(IRoomUser roomListener);
+
         Task OpenAsync();
         Task CloseAsync();
+        Task PlayAsync();
+        Task PauseAsync();
     }
 }

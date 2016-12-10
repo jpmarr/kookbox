@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicPlayerDescriptor
+    public interface IPlayerDescriptor
     {
         string Id { get; }
         string Description { get; }
         IMusicSource Source { get; }
-        Option<IMusicRoom> CurrentRoom { get; }
+        Option<IRoom> CurrentRoom { get; }
     }
 }

@@ -9,13 +9,13 @@ namespace kookbox.mock
 {
     public class MockMusicSource : 
         IMusicSource, 
-        IMusicPlaylistSourceFactory
+        IPlaylistSourceFactory
     {
         private readonly Dictionary<string, MockMusicPlayer> players = new Dictionary<string, MockMusicPlayer>();
-        private List<IMusicArtist> artists;
-        private List<IMusicTrack> tracks = new List<IMusicTrack>();
-        private List<IMusicAlbum> albums = new List<IMusicAlbum>();
-        private IMusicTrack[] randomTracks;
+        private List<IArtist> artists;
+        private List<ITrack> tracks = new List<ITrack>();
+        private List<IAlbum> albums = new List<IAlbum>();
+        private ITrack[] randomTracks;
         private int randomTrackIndex;
 
         public MockMusicSource()
@@ -27,11 +27,11 @@ namespace kookbox.mock
 
         public string Name => "Mock";
         public PlayerCapabilities PlayerCapabilities => PlayerCapabilities.None;
-        public IEnumerable<IMusicPlayerDescriptor> AllPlayers => players.Values;
-        public IEnumerable<IMusicPlayerDescriptor> AvailablePlayers => players.Values.Where(p => !p.CurrentRoom.HasValue);
+        public IEnumerable<IPlayerDescriptor> AllPlayers => players.Values;
+        public IEnumerable<IPlayerDescriptor> AvailablePlayers => players.Values.Where(p => !p.CurrentRoom.HasValue);
         public PlaylistType SupportedPlaylistTypes => PlaylistType.All;
 
-        public Task<Option<IMusicPlayer>> RequestPlayerAsync(IMusicRoom room, string playerId)
+        public Task<Option<IPlayer>> RequestPlayerAsync(IRoom room, string playerId)
         {
             MockMusicPlayer player;
             if (players.TryGetValue(playerId, out player))
@@ -43,43 +43,43 @@ namespace kookbox.mock
                 player.AssignToRoom(room);
             }
 
-            return Task.FromResult(Option.Create((IMusicPlayer)player));
+            return Task.FromResult(Option.Create((IPlayer)player));
         }
 
-        public Task<Option<IMusicPlayer>> RequestAvailablePlayerAsync(IMusicRoom room)
+        public Task<Option<IPlayer>> RequestAvailablePlayerAsync(IRoom room)
         {
             var player = players.Values.FirstOrDefault(p => !p.CurrentRoom.HasValue);
             player?.AssignToRoom(room);
 
-            return Task.FromResult(Option.Create((IMusicPlayer)player));
+            return Task.FromResult(Option.Create((IPlayer)player));
         }
 
-        public Task<Option<IMusicTrack>> GetTrackAsync(string id)
+        public Task<Option<ITrack>> GetTrackAsync(string id)
         {
             return Task.FromResult(Option.Create(tracks.FirstOrDefault(t => t.Id == id)));
         }
 
-        public Task<Option<IMusicAlbum>> GetAlbumAsync(string id)
+        public Task<Option<IAlbum>> GetAlbumAsync(string id)
         {
             return Task.FromResult(Option.Create(albums.FirstOrDefault(t => t.Id == id)));
         }
 
-        public Task<Option<IMusicArtist>> GetArtistAsync(string id)
+        public Task<Option<IArtist>> GetArtistAsync(string id)
         {
             return Task.FromResult(Option.Create(artists.FirstOrDefault(t => t.Id == id)));
         }
 
-        public Task<IMusicSearchResults> SearchAsync(string searchCriteria)
+        public Task<ISearchResults> SearchAsync(string searchCriteria)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IMusicPlaylistSource> CreatePlaylistSourceAsync(string configuration)
+        public Task<IPlaylistSource> CreatePlaylistSourceAsync(string configuration)
         {
-            return Task.FromResult<IMusicPlaylistSource>(new MockMusicPlaylistSource(this));
+            return Task.FromResult<IPlaylistSource>(new MockMusicPlaylistSource(this));
         }
 
-        internal IMusicTrack GetNextRandomTrack()
+        internal ITrack GetNextRandomTrack()
         {
             return randomTracks[randomTrackIndex++%randomTracks.Length];
         }
@@ -89,7 +89,7 @@ namespace kookbox.mock
             artists = (
                 from i in Enumerable.Range(1, 100)
                 select new MockMusicArtist(
-                    Guid.NewGuid().ToString(), "Artist " + i) as IMusicArtist
+                    Guid.NewGuid().ToString(), "Artist " + i) as IArtist
             ).ToList();
 
             var rng = new Random();
@@ -99,7 +99,7 @@ namespace kookbox.mock
                 from albumNumber in Enumerable.Range(1, rng.Next(1, 7))
                 let id = Guid.NewGuid().ToString()
                 select new MockMusicAlbum(
-                    id, $"{artist.Name} - Album {albumNumber}", artist, new Uri("http://albumart/" + id)) as IMusicAlbum
+                    id, $"{artist.Name} - Album {albumNumber}", artist, new Uri("http://albumart/" + id)) as IAlbum
             ).ToList();
 
             tracks = (
@@ -107,7 +107,7 @@ namespace kookbox.mock
                 from trackNumber in Enumerable.Range(1, rng.Next(5, 25))
                 select
                     new MockMusicTrack(this, Guid.NewGuid().ToString(), $"{album.Artist.Name} - Album Track {trackNumber}", album.Artist,
-                        GetRandomTrackDuration(rng)) as IMusicTrack).ToList();
+                        GetRandomTrackDuration(rng)) as ITrack).ToList();
 
             // some non-album tracks to mix it up
             tracks.AddRange(

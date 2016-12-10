@@ -6,7 +6,7 @@ namespace kookbox.core.Messaging.Payloads
     [RegisteredPayload(MessageTypes.TrackStarted, version: 1)]
     public class TrackStarted : MessagePayload
     {
-        public TrackStarted(IMusicRoom room, IMusicTrack track)
+        public TrackStarted(IRoom room, ITrack track)
         {
             if (room == null)
                 throw new ArgumentNullException(nameof(room));

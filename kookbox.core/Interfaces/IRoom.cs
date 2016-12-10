@@ -9,18 +9,18 @@ namespace kookbox.core.Interfaces
     /// and have a particular playlist source for the ongoing music. A room may impose 
     /// specific restrictions on users, types of music allowed etc.
     /// </summary>
-    public interface IMusicRoom
+    public interface IRoom
     {
         string Id { get; }
         string Name { get; }
-        IMusicListener Creator { get; }
-        Option<IMusicPlaylistSource> DefaultTrackSource { get; set; }
-        Option<IQueuedMusicTrack> CurrentTrack { get; }
-        IMusicQueue UpcomingQueue { get; }
-        IEnumerable<IMusicRoomListener> Listeners { get; }
-        IMusicSecurity Security { get; }
+        IUser Creator { get; }
+        Option<IPlaylistSource> DefaultTrackSource { get; set; }
+        Option<IQueuedTrack> CurrentTrack { get; }
+        ITrackQueue UpcomingQueue { get; }
+        IEnumerable<IRoomUser> Users { get; }
+        ISecurity Security { get; }
 
-        IEnumerable<IQueuedMusicTrack> GetTrackHistory(int count);
+        IEnumerable<IQueuedTrack> GetTrackHistory(int count);
         RoomState State { get; }
     }
 

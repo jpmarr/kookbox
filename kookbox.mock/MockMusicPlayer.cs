@@ -6,19 +6,19 @@ using kookbox.core;
 
 namespace kookbox.mock
 {
-    internal class MockMusicPlayer : IMusicPlayer
+    internal class MockMusicPlayer : IPlayer
     {
         private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
 
         private readonly IMusicSource source;
         private readonly string id;
         private readonly string description;
-        private IMusicTrack currentTrack;
+        private ITrack currentTrack;
         private TimeSpan currentPosition;
         private readonly Subject<PlayerEvent> events = new Subject<PlayerEvent>();
         private bool isPlaying;
         private IDisposable subscription;
-        private IMusicRoom currentRoom;
+        private IRoom currentRoom;
 
         public MockMusicPlayer(IMusicSource source, string id, string description)
         {
@@ -29,7 +29,7 @@ namespace kookbox.mock
             this.description = description;
         }
 
-        public void Play(IMusicTrack track)
+        public void Play(ITrack track)
         {
             if (track == null)
                 throw new ArgumentNullException(nameof(track));
@@ -72,9 +72,9 @@ namespace kookbox.mock
             throw new NotImplementedException();
         }
 
-        public Option<IMusicRoom> CurrentRoom { get; }
+        public Option<IRoom> CurrentRoom { get; }
 
-        public Option<IMusicTrack> CurrentTrack => Option.Create(currentTrack);
+        public Option<ITrack> CurrentTrack => Option.Create(currentTrack);
         public bool CanSeek => false;
         public IObservable<PlayerEvent> Events => events;
         public TimeSpan CurrentPosition => currentPosition;
@@ -83,7 +83,7 @@ namespace kookbox.mock
         public string Description => description;
         public IMusicSource Source => source;
 
-        internal void AssignToRoom(IMusicRoom room)
+        internal void AssignToRoom(IRoom room)
         {
             currentRoom = room;
         }

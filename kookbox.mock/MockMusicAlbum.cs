@@ -4,11 +4,11 @@ using kookbox.core.Interfaces;
 
 namespace kookbox.mock
 {
-    public class MockMusicAlbum : IMusicAlbum
+    public class MockMusicAlbum : IAlbum
     {
-        private readonly List<IMusicTrack> tracks = new List<IMusicTrack>();
+        private readonly List<ITrack> tracks = new List<ITrack>();
 
-        public MockMusicAlbum(string id, string name, IMusicArtist artist, Uri imageUri)
+        public MockMusicAlbum(string id, string name, IArtist artist, Uri imageUri)
         {
             Id = id;
             Name = name;
@@ -19,11 +19,11 @@ namespace kookbox.mock
 
         public string Id { get; }
         public string Name { get; }
-        public IMusicArtist Artist { get; }
-        public IEnumerable<IMusicTrack> Tracks => tracks;
+        public IArtist Artist { get; }
+        public IEnumerable<ITrack> Tracks => tracks;
         public Uri ImageUri { get; }
 
-        internal void AddTrack(IMusicTrack track)
+        internal void AddTrack(ITrack track)
         {
             tracks.Add(track);
         }

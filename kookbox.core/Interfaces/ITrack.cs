@@ -2,16 +2,16 @@
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicTrack
+    public interface ITrack
     {
         string Id { get; }
         IMusicSource Source { get; }
         string Title { get; }
         int Number { get; }
-        IMusicArtist Artist { get; }
-        Option<IMusicAlbum> Album { get; }
+        IArtist Artist { get; }
+        Option<IAlbum> Album { get; }
         TimeSpan Duration { get; }
-        IMusicListener Introducer { get; }
+        IUser Introducer { get; }
         Option<IBan> Ban { get; }
     }
 }

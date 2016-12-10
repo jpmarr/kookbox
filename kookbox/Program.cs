@@ -18,7 +18,7 @@ namespace kookbox
 
         private static async void DoTheStuffAsync()
         {
-            IMusicServer server = new Server();
+            IServer server = new Server();
             server.Sources.RegisterMusicSource(new MockMusicSource());
             server.StartAsync();
 

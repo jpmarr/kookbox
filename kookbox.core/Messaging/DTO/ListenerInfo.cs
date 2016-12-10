@@ -10,7 +10,7 @@ namespace kookbox.core.Messaging.DTO
             Name = name;
         }
 
-        public static ListenerInfo FromListener(IMusicListener listener)
+        public static ListenerInfo FromListener(IUser listener)
         {
             if (listener == null)
                 return null;

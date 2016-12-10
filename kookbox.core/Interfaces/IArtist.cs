@@ -2,7 +2,7 @@
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicArtist
+    public interface IArtist
     {
         string Id { get; }
         string Name { get; }

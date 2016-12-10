@@ -1,6 +1,6 @@
 ﻿namespace kookbox.core.Interfaces
 {
-    public interface IMusicListenerRole
+    public interface IUserRole
     {
         string Name { get; }
     }

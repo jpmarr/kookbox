@@ -17,15 +17,15 @@ namespace kookbox.core.Interfaces
         // A source may expose multiple players (ie Sonos each room is a player, Spotify - each registered account will have a player)
         // Rooms must request a player since each player can only support one room at a a time
         // If a source declares UnlimitedPlayback capabiltiies then PlayersAvailable will throw NotSupported and any RequestPlayer call will succeed
-        IEnumerable<IMusicPlayerDescriptor> AllPlayers { get; }
-        IEnumerable<IMusicPlayerDescriptor> AvailablePlayers { get; }
-        Task<Option<IMusicPlayer>> RequestPlayerAsync(IMusicRoom room, string playerId);
-        Task<Option<IMusicPlayer>> RequestAvailablePlayerAsync(IMusicRoom room);
+        IEnumerable<IPlayerDescriptor> AllPlayers { get; }
+        IEnumerable<IPlayerDescriptor> AvailablePlayers { get; }
+        Task<Option<IPlayer>> RequestPlayerAsync(IRoom room, string playerId);
+        Task<Option<IPlayer>> RequestAvailablePlayerAsync(IRoom room);
 
-        Task<Option<IMusicTrack>> GetTrackAsync(string id);
-        Task<Option<IMusicAlbum>> GetAlbumAsync(string id);
-        Task<Option<IMusicArtist>> GetArtistAsync(string id);
-        Task<IMusicSearchResults> SearchAsync(string searchCriteria);
+        Task<Option<ITrack>> GetTrackAsync(string id);
+        Task<Option<IAlbum>> GetAlbumAsync(string id);
+        Task<Option<IArtist>> GetArtistAsync(string id);
+        Task<ISearchResults> SearchAsync(string searchCriteria);
     }
 
     [Flags]

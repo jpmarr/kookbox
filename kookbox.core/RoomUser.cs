@@ -7,27 +7,22 @@ using kookbox.core.Interfaces.Internal;
 
 namespace kookbox.core
 {
-    internal class RoomListener : IMusicRoomListener
+    internal class RoomUser : IRoomUser
     {
-        private readonly IMusicRoomController controller;
+        private readonly IRoomController controller;
 
-        public RoomListener(IMusicRoomController room, IMusicListener listener)
+        public RoomUser(IRoomController room, IUser listener)
         {
             this.controller = room;
             Listener = listener;
         }
 
-        public IMusicRoom Room => controller.Room;
-        public IMusicListener Listener { get; }
+        public IRoom Room => controller;
+        public IUser Listener { get; }
         public bool IsConnected { get; }
-        public IEnumerable<IMusicListenerRole> RoomRoles { get; }
+        public IEnumerable<IUserRole> RoomRoles { get; }
         public Option<IPoll> Poll { get; }
         public Option<IBan> Ban { get; }
-
-        public Task DisconnectAsync()
-        {
-            throw new NotImplementedException();
-        }
 
         public Task OpenRoomAsync()
         {
@@ -35,6 +30,36 @@ namespace kookbox.core
         }
 
         public Task CloseRooomAsync()
+        {
+            return controller.CloseAsync();
+        }
+
+        public Task PlayRoomAsync()
+        {
+            return controller.PlayAsync();
+        }
+
+        public Task PauseRoomAsync()
+        {
+            return controller.PlayAsync();
+        }
+
+        public Task RequestTrackAsync(ITrack track, Option<IDedication> dedication)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StartTrackSkipPollAsync(IQueuedTrack track)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StartListenerBanPollAsync(IRoomUser listener)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task VoteInPollAsync(IPoll poll, VoteType voteType)
         {
             throw new NotImplementedException();
         }
@@ -44,32 +69,7 @@ namespace kookbox.core
             throw new NotImplementedException();
         }
 
-        public Task PlayRoomAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task PauseRoomAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task RequestTrackAsync(IMusicTrack track, Option<IMusicDedication> dedication)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task StartTrackSkipPollAsync(IQueuedMusicTrack track)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task StartListenerBanPollAsync(IMusicRoomListener listener)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task VoteInPollAsync(IPoll poll, VoteType voteType)
+        public Task DisconnectAsync()
         {
             throw new NotImplementedException();
         }

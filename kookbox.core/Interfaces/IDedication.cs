@@ -1,8 +1,8 @@
 ﻿namespace kookbox.core.Interfaces
 {
-    public interface IMusicDedication
+    public interface IDedication
     {
-        IMusicListener DedicatedTo { get; }
+        IUser DedicatedTo { get; }
         Option<string> Message { get; }
     }
 }

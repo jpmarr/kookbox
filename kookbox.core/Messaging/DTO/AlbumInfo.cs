@@ -10,7 +10,7 @@ namespace kookbox.core.Messaging.DTO
             Name = name;
         }
 
-        public static AlbumInfo FromAlbum(IMusicAlbum album)
+        public static AlbumInfo FromAlbum(IAlbum album)
         {
             if (album == null)
                 return null;

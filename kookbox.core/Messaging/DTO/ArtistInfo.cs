@@ -10,7 +10,7 @@ namespace kookbox.core.Messaging.DTO
             Name = name;
         }
 
-        public static ArtistInfo FromArtist(IMusicArtist artist)
+        public static ArtistInfo FromArtist(IArtist artist)
         {
             if (artist == null)
                 return null;

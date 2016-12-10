@@ -2,14 +2,14 @@
 
 namespace kookbox.core.Interfaces
 {
-    public interface IQueuedMusicTrack
+    public interface IQueuedTrack
     {
         string Id { get; }
         int Position { get; }
-        IMusicTrack Track { get; }
+        ITrack Track { get; }
         DateTimeOffset QueuedTimestamp { get; }
         Option<IPoll> Poll { get; }
-        Option<IMusicListener> Requester { get; }
-        Option<IMusicDedication> Dedication { get; }
+        Option<IUser> Requester { get; }
+        Option<IDedication> Dedication { get; }
     }
 }

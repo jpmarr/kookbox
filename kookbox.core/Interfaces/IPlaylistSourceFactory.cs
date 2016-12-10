@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicPlaylistSourceFactory
+    public interface IPlaylistSourceFactory
     {
         PlaylistType SupportedPlaylistTypes { get; }
-        Task<IMusicPlaylistSource> CreatePlaylistSourceAsync(string configuration);
+        Task<IPlaylistSource> CreatePlaylistSourceAsync(string configuration);
     }
 }

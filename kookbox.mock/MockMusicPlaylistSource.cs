@@ -7,7 +7,7 @@ using kookbox.core.Interfaces;
 
 namespace kookbox.mock
 {
-    internal class MockMusicPlaylistSource : IMusicPlaylistSource
+    internal class MockMusicPlaylistSource : IPlaylistSource
     {
         private readonly MockMusicSource source;
 
@@ -20,9 +20,9 @@ namespace kookbox.mock
         public PlaylistType PlaylistType => PlaylistType.Random;
         public bool IsExhausted => false;
 
-        public Task<Option<IMusicTrack>> GetNextTrackAsync()
+        public Task<Option<ITrack>> GetNextTrackAsync()
         {
-            return Task.FromResult(Option<IMusicTrack>.Some(source.GetNextRandomTrack()));
+            return Task.FromResult(Option<ITrack>.Some(source.GetNextRandomTrack()));
         }
     }
 }

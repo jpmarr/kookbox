@@ -3,12 +3,11 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicRoomListener
+    public interface IRoomUser
     {
-        IMusicRoom Room { get; }
-        IMusicListener Listener { get; }
-        bool IsConnected { get; }
-        IEnumerable<IMusicListenerRole> RoomRoles { get; }
+        IRoom Room { get; }
+        IUser Listener { get; }
+        IEnumerable<IUserRole> RoomRoles { get; }
         Option<IPoll> Poll { get; }
         Option<IBan> Ban { get; }
 
@@ -21,9 +20,9 @@ namespace kookbox.core.Interfaces
         Task PlayRoomAsync();
         Task PauseRoomAsync();
 
-        Task RequestTrackAsync(IMusicTrack track, Option<IMusicDedication> dedication);
-        Task StartTrackSkipPollAsync(IQueuedMusicTrack track);
-        Task StartListenerBanPollAsync(IMusicRoomListener listener);
+        Task RequestTrackAsync(ITrack track, Option<IDedication> dedication);
+        Task StartTrackSkipPollAsync(IQueuedTrack track);
+        Task StartListenerBanPollAsync(IRoomUser listener);
 
         Task VoteInPollAsync(IPoll poll, VoteType voteType);
     }

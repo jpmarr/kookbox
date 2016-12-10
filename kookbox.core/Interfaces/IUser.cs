@@ -3,26 +3,26 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicListener
+    public interface IUser
     {
         string Id { get; }
         string Name { get; }
         bool IsConnected { get; }
-        Option<IMusicRoom> ActiveRoom { get; }
+        Option<IRoom> ActiveRoom { get; }
         Option<IBan> Ban { get; }
-        IEnumerable<IMusicListenerRole> ServerRoles { get; }
+        IEnumerable<IUserRole> ServerRoles { get; }
         IEnumerable<INetworkTransport> Transports { get; }
 
         Task ConnectAsync(INetworkTransport transport);
         Task DisconnectAsync(INetworkTransport transport);
         Task DisconnectAsync();
 
-        Task<IMusicRoomListener> ConnectToRoomAsync(IMusicRoom room);
-        Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name);
+        Task<IRoomUser> ConnectToRoomAsync(IRoom room);
+        Task<IRoom> CreateRoomAsync(IUser creator, string name);
 
-        Task StartListenerBanPollAsync(IMusicListener listener);
-        Task StartRoomSwitchPollAsync(IMusicRoom newRoom);
-        Task StartRoomBanPollAsync(IMusicRoom room);
+        Task StartListenerBanPollAsync(IUser listener);
+        Task StartRoomSwitchPollAsync(IRoom newRoom);
+        Task StartRoomBanPollAsync(IRoom room);
 
         Task VoteInPollAsync(IPoll poll);
     }

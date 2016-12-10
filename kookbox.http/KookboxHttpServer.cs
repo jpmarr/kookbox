@@ -12,10 +12,10 @@ namespace kookbox.http
 {
     public class KookboxHttpServer : IStartup
     {
-        private readonly IMusicServer server;
+        private readonly IServer server;
         private readonly IWebHost host;
 
-        public KookboxHttpServer(IMusicServer server)
+        public KookboxHttpServer(IServer server)
         {
             this.server = server;
 
@@ -60,7 +60,7 @@ namespace kookbox.http
         private async Task HandleWebSocketRequest(HttpContext http)
         {
             var transport = new WebsocketNetworkTransport(http);
-            await server.ConnectListenerAsync("jim", transport);
+            await server.ConnectUserAsync("jim", transport);
             await transport.OpenAsync();
         }
     }

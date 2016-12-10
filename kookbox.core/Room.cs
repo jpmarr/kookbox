@@ -9,28 +9,28 @@ using kookbox.core.Messaging;
 
 namespace kookbox.core
 {
-    // todo: remove all actions from the room itself and move to room listener so 
-    // they are all done in the context of a specific user only - this allows for cleaner security management
-    internal class Room : IMusicRoomController
+    internal class Room : IRoomController
     {
-        private readonly IMusicServer server;
-        private readonly IMusicSecurity security = new MusicSecurity();
         private readonly int upcomingMinimumCount = 20;
-        private readonly List<IMusicRoomListener> listeners = new List<IMusicRoomListener>();
-        private readonly IMusicQueue queue = new MusicQueue();
-        private IDisposable playerEventSubscription;
-        private Option<IQueuedMusicTrack> currentTrack = Option<IQueuedMusicTrack>.None();
-        private readonly Dictionary<IMusicSource, IMusicPlayer> players = new Dictionary<IMusicSource, IMusicPlayer>();
 
-        private Room(IMusicServer server)
+        private readonly IServerController server;
+        private readonly ISecurity security = new Security();
+        private readonly List<IRoomUser> users = new List<IRoomUser>();
+        private readonly ITrackQueue queue = new TrackQueue();
+        private IDisposable playerEventSubscription;
+        private Option<IQueuedTrack> currentTrack = Option<IQueuedTrack>.None();
+        private readonly Dictionary<IMusicSource, IPlayer> players = new Dictionary<IMusicSource, IPlayer>();
+
+        private Room(IServerController server)
         {
             if (server == null)
                 throw new ArgumentNullException(nameof(server));
 
+            this.Id = Guid.NewGuid().ToString();
             this.server = server;
         }
 
-        public Room(IMusicServer server, IMusicRoomDeserialiser deserialiser)
+        public Room(IServerController server, IRoomDeserialiser deserialiser)
             : this(server)
         {
             if (deserialiser == null)
@@ -45,7 +45,7 @@ namespace kookbox.core
         /// <param name="server"></param>
         /// <param name="creator"></param>
         /// <param name="name"></param>
-        public Room(IMusicServer server, IMusicListener creator, string name)
+        public Room(IServerController server, IUser creator, string name)
             : this(server)
         {
             if (creator == null)
@@ -59,19 +59,19 @@ namespace kookbox.core
 
         public string Id { get; }
         public string Name { get; }
-        public IMusicListener Creator { get; }
-        public IMusicSecurity Security { get; }
+        public IUser Creator { get; }
+        public ISecurity Security { get; }
         
         //todo: multiple sources??? legal to have no -source from a 'request-only' room?
-        public Option<IMusicPlaylistSource> DefaultTrackSource { get; set; }
+        public Option<IPlaylistSource> DefaultTrackSource { get; set; }
 
-        public Option<IQueuedMusicTrack> CurrentTrack
+        public Option<IQueuedTrack> CurrentTrack
         {
             get { return currentTrack; }
             set
             {
                 // if playing, stop
-                CurrentTrack.IfHasValue(async _ => await PauseAsync());
+                CurrentTrack.IfHasValue(async _ => await ((IRoomController)this).PauseAsync());
 
                 currentTrack = value;
                 // if track is still set and we were playing, play the new track
@@ -79,8 +79,8 @@ namespace kookbox.core
             }
         }
 
-        public IMusicQueue UpcomingQueue => queue;
-        public IEnumerable<IMusicRoomListener> Listeners => listeners;
+        public ITrackQueue UpcomingQueue => queue;
+        public IEnumerable<IRoomUser> Users => users;
 
         public RoomState State
         {
@@ -90,68 +90,66 @@ namespace kookbox.core
             }
         }
 
-        public IMusicRoomListener ConnectListener(IMusicListener listener)
+        IRoomUser IRoomController.ConnectUser(IUser listener)
         {
             if (listener == null)
                 throw new ArgumentNullException(nameof(listener));
 
-            security.CheckListenerHasPermission(listener, Permission.Connect, Option.Create(this));
+            security.CheckUserHasPermission(listener, Permission.Connect, Option.Create(this));
 
             // add this listener if they're not already in the list
-            IMusicRoomListener roomListener;
-            lock (listeners)
-                roomListener = listeners.FirstOrDefault(l => l.Listener == listener);
+            IRoomUser roomListener;
+            lock (users)
+                roomListener = users.FirstOrDefault(l => l.Listener == listener);
 
             if (roomListener == null)
             {
-                roomListener = new RoomListener(this, this, listener);
-                lock (listeners)
-                    listeners.Add(roomListener);
+                roomListener = new RoomUser(this, listener);
+                lock (users)
+                    users.Add(roomListener);
             }
 
             return roomListener;
         }
 
-        public void DisconnectListener(IMusicRoomListener roomListener)
+        void IRoomController.DisconnectUser(IRoomUser roomListener)
         {
             if (roomListener.Room != this)
                 throw new ArgumentException("listener is not for this room");
 
-            lock (listeners)
-                listeners.Remove(roomListener);
-
-            roomListener.Listener.ConnectToRoom(Option<IMusicRoom>.None());
+            lock (users)
+                users.Remove(roomListener);
         }
 
-        public async Task PlayAsync()
-        {
-            CurrentTrack.IfHasValue(async track => await PlayTrackAsync(track));   
-        }
-
-        public async Task PauseAsync()
-        {
-            CurrentTrack.IfHasValue(async track => await PauseTrackAsync(track));    
-        }
-
-        public IEnumerable<IQueuedMusicTrack> GetTrackHistory(int count)
+        public IEnumerable<IQueuedTrack> GetTrackHistory(int count)
         {
             throw new NotImplementedException();
         }
 
-        async Task IMusicRoomController.OpenAsync()
+        async Task IRoomController.PlayAsync()
+        {
+            CurrentTrack.IfHasValue(async track => await PlayTrackAsync(track));   
+        }
+
+        async Task IRoomController.PauseAsync()
+        {
+            CurrentTrack.IfHasValue(async track => await PauseTrackAsync(track));    
+        }
+
+        async Task IRoomController.OpenAsync()
         {
             if (!CurrentTrack.HasValue)
                 await InitialiseRoom();
 
-            await PlayAsync();
+            await ((IRoomController)this).PlayAsync();
         }
 
-        async Task IMusicRoomController.CloseAsync()
+        async Task IRoomController.CloseAsync()
         {
-            await PauseAsync();
+            await ((IRoomController)this).PauseAsync();
         }
 
-        private async Task PlayTrackAsync(IQueuedMusicTrack queued)
+        private async Task PlayTrackAsync(IQueuedTrack queued)
         {
             var player = await GetPlayerForSourceAsync(queued.Track.Source);
             player
@@ -162,10 +160,10 @@ namespace kookbox.core
                 });
         }
 
-        private async Task<Option<IMusicPlayer>> GetPlayerForSourceAsync(IMusicSource source)
+        private async Task<Option<IPlayer>> GetPlayerForSourceAsync(IMusicSource source)
         {
             // todo: may have specific player preference here
-            IMusicPlayer player;
+            IPlayer player;
             if (!players.TryGetValue(source, out player))
             {
                 var sourcePlayer = await source.RequestAvailablePlayerAsync(this);
@@ -179,7 +177,7 @@ namespace kookbox.core
             return Option.Create(player);
         }
 
-        private void SubscribePlayerEvents(IMusicPlayer player)
+        private void SubscribePlayerEvents(IPlayer player)
         {
             playerEventSubscription?.Dispose();
             playerEventSubscription = player.Events.Subscribe(async evt => await HandlePlayerEventAsync(evt));
@@ -206,18 +204,18 @@ namespace kookbox.core
                 case PlayerEvent.PlaybackComplete:
                     CurrentTrack.IfHasValue(t => Console.WriteLine($"Completed Track: \"{t.Track.Title}"));
                     await CueNextTrackAsync();
-                    await PlayAsync();
+                    await ((IRoomController)this).PlayAsync();
                     break;
             }  
         }
 
-        private void HandlePlaybackStarted(IQueuedMusicTrack queued)
+        private void HandlePlaybackStarted(IQueuedTrack queued)
         {
             Console.WriteLine($"Start Track: \"{queued.Track.Title}\" - Duration: {queued.Track.Duration}");
             SendMessageToAllListeners(MessageFactory.TrackStarted(this, queued.Track));
         }
 
-        private async Task PauseTrackAsync(IQueuedMusicTrack queued)
+        private async Task PauseTrackAsync(IQueuedTrack queued)
         {
             var player = await GetPlayerForSourceAsync(queued.Track.Source);
             player.IfHasValue(p => p.Stop());
@@ -250,14 +248,14 @@ namespace kookbox.core
             });
         }
 
-        private void AddToHistory(IQueuedMusicTrack track)
+        private void AddToHistory(IQueuedTrack track)
         {
             
         }
 
         private void SendMessageToAllListeners(INetworkMessage message)
         {
-            foreach (var roomListener in listeners)
+            foreach (var roomListener in users)
                 foreach (var transport in roomListener.Listener.Transports)
                     transport.QueueMessage(message);
         }

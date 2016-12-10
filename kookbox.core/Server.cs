@@ -10,11 +10,11 @@ using kookbox.core.Messaging.DTO;
 
 namespace kookbox.core
 {
-    public class Server : IMusicServer
+    public class Server : IServerController
     {
-        private readonly List<IMusicRoomController> rooms = new List<IMusicRoomController>();
-        private readonly List<IMusicListener> connectedListeners = new List<IMusicListener>();
-        private readonly IMusicSecurity security = new MusicSecurity();
+        private readonly List<IRoomController> rooms = new List<IRoomController>();
+        private readonly List<IUser> connectedUsers = new List<IUser>();
+        private readonly ISecurity security = new Security();
 
         public Server()
         {
@@ -23,30 +23,29 @@ namespace kookbox.core
         }
 
         public IMusicSources Sources { get; } = new MusicSources();
-        public IEnumerable<IMusicListener> ConnectedListeners => connectedListeners;
-        public IEnumerable<IMusicRoom> Rooms => rooms;
-        public IMusicSecurity Security => security;
+        public IEnumerable<IUser> ConnectedUsers => connectedUsers;
+        public IEnumerable<IRoom> Rooms => rooms;
+        public ISecurity Security => security;
 
         public async Task StartAsync()
         {
             // todo: deserialize any state here    
 
             // todo: temp - this will loaded from state storage
-            var listener = new MusicListener(this, "jim") as IMusicListener;
-            connectedListeners.Add(listener);
+            var user = new User(this, "jim") as IUser;
+            connectedUsers.Add(user);
 
-            var room = await CreateRoomAsync(listener, "Test Room");
+            var room = await (this as IServerController).CreateRoomAsync(user, "Test Room");
+
             var source = Sources.First();
-
-            IMusicPlaylistSource playlist = null;
-            var playlistFactory = source as IMusicPlaylistSourceFactory;
+            IPlaylistSource playlist = null;
+            var playlistFactory = source as IPlaylistSourceFactory;
             if (playlistFactory != null)
                 playlist = playlistFactory.CreatePlaylistSourceAsync("random").Result;
-
             room.DefaultTrackSource = Option.Some(playlist);
 
-            var roomListener = await listener.ConnectToRoomAsync(room);
-            await roomListener.OpenRoomAsync();
+            var roomUser = await user.ConnectToRoomAsync(room);
+            await roomUser.OpenRoomAsync();
         }
 
         public Task StopAsync()
@@ -54,63 +53,68 @@ namespace kookbox.core
             return null;
         }
 
-        public Task<IMusicRoom> CreateRoomAsync(IMusicListener creator, string name)
+        Task<IRoomController> IServerController.CreateRoomAsync(IUser creator, string name)
         {
             if (creator == null)
                 throw new ArgumentNullException(nameof(creator));
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            security.CheckListenerHasPermission(creator, Permission.CreateRoom, Option.Create(this));
+            security.CheckUserHasPermission(creator, Permission.CreateRoom, Option.Create(this));
 
             var room = new Room(this, creator, name);
             rooms.Add(room);
 
-            return Task.FromResult<IMusicRoom>(room);
+            return Task.FromResult<IRoomController>(room);
         }
 
-        public async Task<IMusicListener> ConnectListenerAsync(string username, INetworkTransport transport)
+        public async Task<IUser> ConnectUserAsync(string username, INetworkTransport transport)
         {
             if (username == null)
                 throw new ArgumentNullException(nameof(username));
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));
 
-            IMusicListener listener;
-            if (GetListener(username).TryGetValue(out listener))
-                await listener.ConnectAsync(transport);
+            IUser user;
+            if (GetUser(username).TryGetValue(out user))
+                await user.ConnectAsync(transport);
             else
             {
-                listener = new MusicListener(this, username, transport);
-                security.CheckListenerHasPermission(listener, Permission.Connect, Option.Create(this));
-                connectedListeners.Add(listener);
+                user = new User(this, username, transport);
+                security.CheckUserHasPermission(user, Permission.Connect, Option.Create(this));
+                connectedUsers.Add(user);
             };
 
             //todo: get listener default room
             var room = rooms.First();
-            await listener.ConnectToRoomAsync(room);
+            await user.ConnectToRoomAsync(room);
 
             transport.QueueMessage(MessageFactory.ConnectionResponse(RoomInfo.FromRoom(room)));
 
-            return listener;
+            return user;
         }
 
-        public Task<IEnumerable<IMusicListener>> GetListenersAsync(Paging paging)
+        public Task<IEnumerable<IUser>> GetUsersAsync(Paging paging)
         {
             throw new NotImplementedException();
         }
 
-        private Option<IMusicListener> GetListener(string username)
+        private Option<IUser> GetUser(string username)
         {
             // todo: overall user store
-            return Option.Create(connectedListeners.FirstOrDefault(l => l.Name == username));
+            return Option.Create(connectedUsers.FirstOrDefault(l => l.Name == username));
         }
 
-        private void SendMessageToAllListeners(INetworkMessage message)
+        private void SendMessageToAllUsers(INetworkMessage message)
         {
-            foreach (var listener in connectedListeners)
+            foreach (var listener in connectedUsers)
                 foreach (var transport in listener.Transports)
                     transport.QueueMessage(message);
+        }
+
+        IRoomController IServerController.GetRoom(string id)
+        {
+            return rooms.FirstOrDefault(r => r.Id == id);
         }
     }
 }

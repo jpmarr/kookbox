@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicPlaylistSource
+    public interface IPlaylistSource
     {
         string Name { get; }
         PlaylistType PlaylistType { get; }
         bool IsExhausted { get; }
 
-        Task<Option<IMusicTrack>> GetNextTrackAsync();
+        Task<Option<ITrack>> GetNextTrackAsync();
     }
 
     [Flags]

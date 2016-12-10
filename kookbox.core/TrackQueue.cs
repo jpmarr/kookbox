@@ -6,19 +6,19 @@ using kookbox.core.Interfaces;
 
 namespace kookbox.core
 {
-    public class MusicQueue : IMusicQueue
+    public class TrackQueue : ITrackQueue
     {
-        private readonly List<IQueuedMusicTrack> tracks = new List<IQueuedMusicTrack>();
+        private readonly List<IQueuedTrack> tracks = new List<IQueuedTrack>();
 
-        public IEnumerable<IQueuedMusicTrack> Tracks => tracks;
+        public IEnumerable<IQueuedTrack> Tracks => tracks;
         public int Count => tracks.Count;
 
-        public void QueueTrack(IMusicTrack track)
+        public void QueueTrack(ITrack track)
         {
-            tracks.Add(new QueuedMusicTrack(track));
+            tracks.Add(new QueuedTrack(track));
         }
 
-        public Option<IQueuedMusicTrack> DequeueNextTrack()
+        public Option<IQueuedTrack> DequeueNextTrack()
         {
             if (tracks.Count > 0)
             {
@@ -26,7 +26,7 @@ namespace kookbox.core
                 tracks.RemoveAt(0);
                 return Option.Some(track);
             }
-            return Option<IQueuedMusicTrack>.None();
+            return Option<IQueuedTrack>.None();
         }
     }
 }

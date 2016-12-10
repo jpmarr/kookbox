@@ -19,7 +19,7 @@ namespace kookbox.core
             sources.Add(source);
         }
 
-        public IObservable<IMusicSearchResults> SearchAsync(string searchCriteria)
+        public IObservable<ISearchResults> SearchAsync(string searchCriteria)
         {
             throw new NotImplementedException();
         }

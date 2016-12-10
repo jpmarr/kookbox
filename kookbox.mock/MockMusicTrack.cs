@@ -7,9 +7,9 @@ using kookbox.core.Interfaces;
 
 namespace kookbox.mock
 {
-    internal class MockMusicTrack : IMusicTrack
+    internal class MockMusicTrack : ITrack
     {
-        public MockMusicTrack(IMusicSource source, string id, string title, IMusicArtist artist, TimeSpan duration)
+        public MockMusicTrack(IMusicSource source, string id, string title, IArtist artist, TimeSpan duration)
         {
             Id = id;
             Source = source;
@@ -21,7 +21,7 @@ namespace kookbox.mock
         public MockMusicTrack(IMusicSource source, string id, string title, MockMusicAlbum album, TimeSpan duration) 
             : this(source, id, title, album.Artist, duration)
         {
-            Album = Option.Some(album as IMusicAlbum);
+            Album = Option.Some(album as IAlbum);
             album.AddTrack(this);
         }
 
@@ -29,10 +29,10 @@ namespace kookbox.mock
         public IMusicSource Source { get; }
         public string Title { get; }
         public int Number { get; }
-        public IMusicArtist Artist { get; }
-        public Option<IMusicAlbum> Album { get; }
+        public IArtist Artist { get; }
+        public Option<IAlbum> Album { get; }
         public TimeSpan Duration { get; }
-        public IMusicListener Introducer { get; }
+        public IUser Introducer { get; }
         public Option<IBan> Ban { get; }
         public Uri ImageUri { get; }
     }

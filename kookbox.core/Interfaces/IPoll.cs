@@ -4,7 +4,7 @@ namespace kookbox.core.Interfaces
 {
     public interface IPoll
     {
-        IEnumerable<IMusicListener> VotesFor { get; }
-        IEnumerable<IMusicListener> VotesAgainst { get; }
+        IEnumerable<IUser> VotesFor { get; }
+        IEnumerable<IUser> VotesAgainst { get; }
     }
 }

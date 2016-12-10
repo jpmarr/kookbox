@@ -6,7 +6,7 @@ using kookbox.core.Interfaces;
 
 namespace kookbox.mock
 {
-    public class MockMusicArtist : IMusicArtist
+    public class MockMusicArtist : IArtist
     {
         public MockMusicArtist(string id, string name)
         {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces.Serialisation
 {
-    public interface IMusicRoomDeserialiser
+    public interface IRoomSerialiser
     {
     }
 }

@@ -22,7 +22,7 @@ namespace kookbox.core.Messaging
         }
 
         // todo: consider pools for these message classes...
-        public static INetworkMessage TrackStarted(IMusicRoom room, IMusicTrack track)
+        public static INetworkMessage TrackStarted(IRoom room, ITrack track)
         {
             return NetworkMessage.Create(new TrackStarted(room, track));
         }

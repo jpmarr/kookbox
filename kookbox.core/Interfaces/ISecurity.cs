@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces
 {
-    public interface IMusicSecurity
+    public interface ISecurity
     {
-        void CheckListenerHasPermission<T>(IMusicListener listener, Permission requiredPermission, Option<T> target);
+        void CheckUserHasPermission<T>(IUser listener, Permission requiredPermission, Option<T> target);
     }
 
     public enum Permission

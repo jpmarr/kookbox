@@ -16,7 +16,7 @@ namespace kookbox.core.Messaging.DTO
             Requester = requester;
         }
 
-        public static QueuedTrackInfo FromQueuedTrack(IQueuedMusicTrack queued)
+        public static QueuedTrackInfo FromQueuedTrack(IQueuedTrack queued)
         {
             if (queued == null)
                 return null;

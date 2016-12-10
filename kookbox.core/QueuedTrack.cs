@@ -6,18 +6,20 @@ using kookbox.core.Interfaces;
 
 namespace kookbox.core
 {
-    public class QueuedMusicTrack : IQueuedMusicTrack
+    public class QueuedTrack : IQueuedTrack
     {
-        public QueuedMusicTrack(IMusicTrack track)
+        public QueuedTrack(ITrack track)
         {
             Track = track;
             QueuedTimestamp = DateTimeOffset.Now;
         }
 
-        public IMusicTrack Track { get; }
+        public string Id { get; }
+        public int Position { get; }
+        public ITrack Track { get; }
         public DateTimeOffset QueuedTimestamp { get; }
         public Option<IPoll> Poll { get; }
-        public Option<IMusicListener> Requester { get; }
-        public Option<IMusicDedication> Dedication { get; }
+        public Option<IUser> Requester { get; }
+        public Option<IDedication> Dedication { get; }
     }
 }

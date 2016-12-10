@@ -19,7 +19,7 @@ namespace kookbox.core.Messaging.DTO
             ListenerCount = listenerCount;
         }
 
-        public static RoomInfo FromRoom(IMusicRoom room)
+        public static RoomInfo FromRoom(IRoom room)
         {
             return new RoomInfo(
                 room.Id, 
@@ -29,7 +29,7 @@ namespace kookbox.core.Messaging.DTO
                 PlaybackState.Playing, 
                 TimeSpan.MinValue, 
                 room.UpcomingQueue.Count,
-                room.Listeners.Count());    
+                room.Users.Count());    
         }
 
         public string Id { get; }

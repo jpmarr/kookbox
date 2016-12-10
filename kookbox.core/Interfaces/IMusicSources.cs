@@ -8,6 +8,6 @@ namespace kookbox.core.Interfaces
         void RegisterMusicSource(IMusicSource source);
 
         // operations that work across multiple sources like Search etc
-        IObservable<IMusicSearchResults> SearchAsync(string searchCriteria);
+        IObservable<ISearchResults> SearchAsync(string searchCriteria);
     }
 }
