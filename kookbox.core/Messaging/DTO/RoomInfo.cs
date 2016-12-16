@@ -6,7 +6,7 @@ namespace kookbox.core.Messaging.DTO
 {
     public class RoomInfo
     {
-        public RoomInfo(string id, string name, ListenerInfo creator, QueuedTrackInfo currentTrack, PlaybackState playbackState,
+        public RoomInfo(string id, string name, UserInfo creator, QueuedTrackInfo currentTrack, PlaybackState playbackState,
             TimeSpan currentTrackPosition, int upcomingQueueLength, int listenerCount)
         {
             Id = id;
@@ -24,7 +24,7 @@ namespace kookbox.core.Messaging.DTO
             return new RoomInfo(
                 room.Id, 
                 room.Name, 
-                ListenerInfo.FromListener(room.Creator), 
+                UserInfo.FromListener(room.Creator), 
                 QueuedTrackInfo.FromQueuedTrack(room.CurrentTrack.ValueOr(null)),
                 PlaybackState.Playing, 
                 TimeSpan.MinValue, 
@@ -34,7 +34,7 @@ namespace kookbox.core.Messaging.DTO
 
         public string Id { get; }
         public string Name { get; }
-        public ListenerInfo Creator { get; }
+        public UserInfo Creator { get; }
         public QueuedTrackInfo CurrentTrack { get; }
         public PlaybackState PlaybackState { get; }
         public TimeSpan CurrentTrackPosition { get; }

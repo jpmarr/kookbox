@@ -2,20 +2,20 @@
 
 namespace kookbox.core.Messaging.DTO
 {
-    public class ListenerInfo
+    public class UserInfo
     {
-        public ListenerInfo(string id, string name)
+        public UserInfo(string id, string name)
         {
             Id = id;
             Name = name;
         }
 
-        public static ListenerInfo FromListener(IUser listener)
+        public static UserInfo FromListener(IUser listener)
         {
             if (listener == null)
                 return null;
 
-            return new ListenerInfo(listener.Id, listener.Name);
+            return new UserInfo(listener.Id, listener.Name);
         }
 
         public string Id { get; }

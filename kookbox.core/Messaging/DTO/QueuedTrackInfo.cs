@@ -9,7 +9,7 @@ namespace kookbox.core.Messaging.DTO
     // todo: consider using Option types here and writing a custom serializer for JSON to convert to nulls?
     public class QueuedTrackInfo
     {
-        public QueuedTrackInfo(TrackInfo track, DateTimeOffset queuedTimestamp, ListenerInfo requester)
+        public QueuedTrackInfo(TrackInfo track, DateTimeOffset queuedTimestamp, UserInfo requester)
         {
             Track = track;
             QueuedTimestamp = queuedTimestamp;
@@ -24,11 +24,11 @@ namespace kookbox.core.Messaging.DTO
             return new QueuedTrackInfo(
                 TrackInfo.FromTrack(queued.Track),
                 queued.QueuedTimestamp,
-                ListenerInfo.FromListener(queued.Requester.ValueOr(null)));
+                UserInfo.FromListener(queued.Requester.ValueOr(null)));
         }
 
         public TrackInfo Track { get; }
         public DateTimeOffset QueuedTimestamp { get; }
-        public ListenerInfo Requester { get; }
+        public UserInfo Requester { get; }
     }
 }
