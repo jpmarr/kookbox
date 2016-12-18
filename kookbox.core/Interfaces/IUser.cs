@@ -11,11 +11,6 @@ namespace kookbox.core.Interfaces
         Option<IRoom> ActiveRoom { get; }
         Option<IBan> Ban { get; }
         IEnumerable<IUserRole> ServerRoles { get; }
-        IEnumerable<INetworkTransport> Transports { get; }
-
-        Task ConnectAsync(INetworkTransport transport);
-        Task DisconnectAsync(INetworkTransport transport);
-        Task DisconnectAsync();
 
         Task<IRoomUser> ConnectToRoomAsync(IRoom room);
         Task<IRoom> CreateRoomAsync(IUser creator, string name);

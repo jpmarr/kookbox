@@ -61,7 +61,8 @@ namespace kookbox.http
         {
             var transport = new WebsocketNetworkTransport(http);
             await server.ConnectUserAsync("jim", transport);
-            await transport.OpenAsync();
+
+            await transport.RunAsync();
         }
     }
 }

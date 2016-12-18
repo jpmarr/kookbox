@@ -5,7 +5,7 @@ namespace kookbox.core.Interfaces
 {
     public interface INetworkTransport
     {
-        Task OpenAsync();
+        Task RunAsync();
         Task CloseAsync();
         void QueueMessage(INetworkMessage message);
         IObservable<INetworkMessage> ReceivedMessages { get; }

@@ -13,7 +13,7 @@ namespace kookbox.core
     public class Server : IServerController
     {
         private readonly List<IRoomController> rooms = new List<IRoomController>();
-        private readonly List<IUser> connectedUsers = new List<IUser>();
+        private readonly List<IUserController> connectedUsers = new List<IUserController>();
         private readonly ISecurity security = new Security();
 
         public Server()
@@ -32,7 +32,7 @@ namespace kookbox.core
             // todo: deserialize any state here    
 
             // todo: temp - this will loaded from state storage
-            var user = new User(this, "jim") as IUser;
+            var user = new User(this, "jim") as IUserController;
             connectedUsers.Add(user);
 
             var room = await (this as IServerController).CreateRoomAsync(user, "Test Room");
@@ -75,7 +75,7 @@ namespace kookbox.core
             if (transport == null)
                 throw new ArgumentNullException(nameof(transport));
 
-            IUser user;
+            IUserController user;
             if (GetUser(username).TryGetValue(out user))
                 await user.ConnectAsync(transport);
             else
@@ -89,8 +89,6 @@ namespace kookbox.core
             var room = rooms.First();
             await user.ConnectToRoomAsync(room);
 
-            transport.QueueMessage(MessageFactory.ConnectionResponse(RoomInfo.FromRoom(room)));
-
             return user;
         }
 
@@ -99,7 +97,7 @@ namespace kookbox.core
             throw new NotImplementedException();
         }
 
-        private Option<IUser> GetUser(string username)
+        private Option<IUserController> GetUser(string username)
         {
             // todo: overall user store
             return Option.Create(connectedUsers.FirstOrDefault(l => l.Name == username));

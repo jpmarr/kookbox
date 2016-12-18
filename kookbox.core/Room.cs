@@ -15,7 +15,7 @@ namespace kookbox.core
 
         private readonly IServerController server;
         private readonly ISecurity security = new Security();
-        private readonly List<IRoomUser> users = new List<IRoomUser>();
+        private readonly Dictionary<string, IRoomUserController> roomUsers = new Dictionary<string, IRoomUserController>();
         private readonly ITrackQueue queue = new TrackQueue();
         private IDisposable playerEventSubscription;
         private Option<IQueuedTrack> currentTrack = Option<IQueuedTrack>.None();
@@ -80,7 +80,7 @@ namespace kookbox.core
         }
 
         public ITrackQueue UpcomingQueue => queue;
-        public IEnumerable<IRoomUser> Users => users;
+        public IEnumerable<IRoomUser> Users => roomUsers.Values;
 
         public RoomState State
         {
@@ -90,35 +90,34 @@ namespace kookbox.core
             }
         }
 
-        IRoomUser IRoomController.ConnectUser(IUser listener)
+        IRoomUserController IRoomController.ConnectUser(IUserController newUser)
         {
-            if (listener == null)
-                throw new ArgumentNullException(nameof(listener));
+            if (newUser == null)
+                throw new ArgumentNullException(nameof(newUser));
 
-            security.CheckUserHasPermission(listener, Permission.Connect, Option.Create(this));
+            security.CheckUserHasPermission(newUser, Permission.Connect, Option.Create(this));
 
-            // add this listener if they're not already in the list
-            IRoomUser roomListener;
-            lock (users)
-                roomListener = users.FirstOrDefault(l => l.Listener == listener);
-
-            if (roomListener == null)
-            {
-                roomListener = new RoomUser(this, listener);
-                lock (users)
-                    users.Add(roomListener);
+            // add this user if they're not already in the list
+            IRoomUserController roomUser;
+            lock (roomUsers)
+            { 
+                if (!roomUsers.TryGetValue(newUser.Id, out roomUser))
+                {
+                    roomUser = new RoomUser(this, newUser);
+                    roomUsers.Add(newUser.Id, roomUser);
+                }
             }
 
-            return roomListener;
+            return roomUser;
         }
 
-        void IRoomController.DisconnectUser(IRoomUser roomListener)
+        void IRoomController.DisconnectUser(IRoomUser roomUser)
         {
-            if (roomListener.Room != this)
-                throw new ArgumentException("listener is not for this room");
+            if (roomUser.Room != this)
+                throw new ArgumentException("user is not for this room");
 
-            lock (users)
-                users.Remove(roomListener);
+            lock (roomUsers)
+                roomUsers.Remove(roomUser.User.Id);
         }
 
         public IEnumerable<IQueuedTrack> GetTrackHistory(int count)
@@ -255,9 +254,8 @@ namespace kookbox.core
 
         private void SendMessageToAllListeners(INetworkMessage message)
         {
-            foreach (var roomListener in users)
-                foreach (var transport in roomListener.Listener.Transports)
-                    transport.QueueMessage(message);
+            foreach (var roomUser in roomUsers.Values)
+                roomUser.UserController.QueueTransportMessage(message);
         }
     }
 }

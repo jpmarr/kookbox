@@ -6,11 +6,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using kookbox.core.Interfaces;
 using kookbox.core.Interfaces.Internal;
+using kookbox.core.Messaging;
+using kookbox.core.Messaging.DTO;
 
 namespace kookbox.core
 {
-    internal class User : IUser
+    internal class User : IUserController
     {
+        private readonly string id = Guid.NewGuid().ToString();
         private readonly IServerController server;
         private readonly List<INetworkTransport> transports = new List<INetworkTransport>();
         private Option<IRoomUser> roomUser;
@@ -49,7 +52,7 @@ namespace kookbox.core
                 transports.Add(transport);
         }
 
-        public string Id { get; }
+        public string Id => id;
         public string Name { get; }
 
         public bool IsConnected
@@ -77,9 +80,10 @@ namespace kookbox.core
 
         public Option<IBan> Ban { get; }
         public IEnumerable<IUserRole> ServerRoles { get; }
-        public IEnumerable<INetworkTransport> Transports => transports;
 
-        public Task ConnectAsync(INetworkTransport transport)
+        IEnumerable<INetworkTransport> IUserController.Transports => transports;
+
+        Task IUserController.ConnectAsync(INetworkTransport transport)
         {
             if (isDisconnecting == 1)
                 throw new InvalidOperationException();
@@ -88,7 +92,7 @@ namespace kookbox.core
             return Task.CompletedTask;
         }
 
-        public Task DisconnectAsync(INetworkTransport transport)
+        Task IUserController.DisconnectAsync(INetworkTransport transport)
         {
             if (isDisconnecting == 1)
                 throw new InvalidOperationException();
@@ -101,7 +105,7 @@ namespace kookbox.core
             return Task.CompletedTask;
         }
 
-        public async Task DisconnectAsync()
+        async Task IUserController.DisconnectAsync()
         {
             if (Interlocked.CompareExchange(ref isDisconnecting, 1, 0) == 0)
             {
@@ -109,12 +113,22 @@ namespace kookbox.core
                 var transport = transports.FirstOrDefault();
                 while (transport != null)
                 {
-                    await DisconnectAsync(transport);
+                    await Controller.DisconnectAsync(transport);
                     // ReSharper disable once InconsistentlySynchronizedField
                     transport = transports.FirstOrDefault();
                 }
             }
             // disconnect from server/send notification
+        }
+
+        void IUserController.QueueTransportMessage(INetworkMessage message)
+        {
+            INetworkTransport[] safeTransports;
+            lock (transports)
+                safeTransports = transports.ToArray();
+
+            foreach (var transport in safeTransports)
+                transport.QueueMessage(message);
         }
 
         public async Task<IRoomUser> ConnectToRoomAsync(IRoom room)
@@ -166,13 +180,28 @@ namespace kookbox.core
         private void HandleTransportMessage(INetworkMessage message)
         {
             Debug.WriteLine($"message recvd: {message}");
+
+            switch (message.MessageType)
+            {
+                case MessageTypes.TransportRunning:
+                {
+                    IRoomUser ru;
+                    if (roomUser.TryGetValue(out ru))
+                        Controller.QueueTransportMessage(MessageFactory.ConnectionResponse(RoomInfo.FromRoom(ru.Room)));
+                    break;
+                }
+                default:
+                    break;
+            }
         }
 
         private void HandleTransportComplete(INetworkTransport transport)
         {
             Debug.WriteLine($"Detaching transport: {transport}");
 
-            DisconnectAsync(transport);
+            Controller.DisconnectAsync(transport);
         }
+
+        private IUserController Controller => this;
     }
 }

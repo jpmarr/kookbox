@@ -7,6 +7,8 @@ namespace kookbox.core.Messaging
 {
     public abstract class NetworkMessage : INetworkMessage
     {
+        public static readonly INetworkMessage TransportRunning = new NetworkMessage<MessagePayload>(0, 0, null);
+
         private static long correlationId;
 
         protected NetworkMessage(short messageType, byte version)

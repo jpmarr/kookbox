@@ -6,7 +6,7 @@ namespace kookbox.core.Interfaces
     public interface IRoomUser
     {
         IRoom Room { get; }
-        IUser Listener { get; }
+        IUser User { get; }
         IEnumerable<IUserRole> RoomRoles { get; }
         Option<IPoll> Poll { get; }
         Option<IBan> Ban { get; }

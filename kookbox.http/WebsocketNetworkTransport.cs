@@ -43,9 +43,10 @@ namespace kookbox.http
             messageQueue = new ActionBlock<INetworkMessage>(SendMessageAsync);
         }
 
-        public async Task OpenAsync()
+        public async Task RunAsync()
         {
             socket = await context.WebSockets.AcceptWebSocketAsync();
+            messageSink.OnNext(NetworkMessage.TransportRunning);
             await BeginReceive();
         }
 
@@ -57,6 +58,7 @@ namespace kookbox.http
 
         public void QueueMessage(INetworkMessage message)
         {
+
             messageQueue.Post(message);
         }
 

@@ -7,18 +7,19 @@ using kookbox.core.Interfaces.Internal;
 
 namespace kookbox.core
 {
-    internal class RoomUser : IRoomUser
+    internal class RoomUser : IRoomUserController
     {
-        private readonly IRoomController controller;
+        private readonly IRoomController roomController;
+        private readonly IUserController userController;
 
-        public RoomUser(IRoomController room, IUser listener)
+        public RoomUser(IRoomController roomController, IUserController userController)
         {
-            this.controller = room;
-            Listener = listener;
+            this.roomController = roomController;
+            this.userController = userController;
         }
 
-        public IRoom Room => controller;
-        public IUser Listener { get; }
+        public IRoom Room => roomController;
+        public IUser User => userController;
         public bool IsConnected { get; }
         public IEnumerable<IUserRole> RoomRoles { get; }
         public Option<IPoll> Poll { get; }
@@ -26,22 +27,22 @@ namespace kookbox.core
 
         public Task OpenRoomAsync()
         {
-            return controller.OpenAsync();
+            return roomController.OpenAsync();
         }
 
         public Task CloseRooomAsync()
         {
-            return controller.CloseAsync();
+            return roomController.CloseAsync();
         }
 
         public Task PlayRoomAsync()
         {
-            return controller.PlayAsync();
+            return roomController.PlayAsync();
         }
 
         public Task PauseRoomAsync()
         {
-            return controller.PlayAsync();
+            return roomController.PlayAsync();
         }
 
         public Task RequestTrackAsync(ITrack track, Option<IDedication> dedication)
@@ -73,5 +74,9 @@ namespace kookbox.core
         {
             throw new NotImplementedException();
         }
+
+        IRoomController IRoomUserController.RoomController => roomController;
+
+        IUserController IRoomUserController.UserController => userController;
     }
 }

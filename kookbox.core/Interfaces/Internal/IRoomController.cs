@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace kookbox.core.Interfaces.Internal
 {
     internal interface IRoomController : IRoom
     {
-        IRoomUser ConnectUser(IUser listener);
-        void DisconnectUser(IRoomUser roomListener);
+        IRoomUserController ConnectUser(IUserController user);
+        void DisconnectUser(IRoomUser roomUser);
 
         Task OpenAsync();
         Task CloseAsync();
