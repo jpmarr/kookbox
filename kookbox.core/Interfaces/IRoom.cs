@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using kookbox.core.Interfaces.Events;
 
 namespace kookbox.core.Interfaces
 {
@@ -22,6 +24,8 @@ namespace kookbox.core.Interfaces
 
         IEnumerable<IQueuedTrack> GetTrackHistory(int count);
         RoomState State { get; }
+
+        IObservable<Event> Events { get; }
     }
 
     public enum RoomState

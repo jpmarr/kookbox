@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using kookbox.core.Interfaces;
 using System.Reactive.Subjects;
 using kookbox.core;
+using kookbox.core.Interfaces.Events;
 
 namespace kookbox.mock
 {
@@ -15,7 +16,7 @@ namespace kookbox.mock
         private readonly string description;
         private ITrack currentTrack;
         private TimeSpan currentPosition;
-        private readonly Subject<PlayerEvent> events = new Subject<PlayerEvent>();
+        private readonly Subject<Event> events = new Subject<Event>();
         private bool isPlaying;
         private IDisposable subscription;
         private IRoom currentRoom;
@@ -43,15 +44,15 @@ namespace kookbox.mock
             }
 
             isPlaying = true;
-            events.OnNext(PlayerEvent.StartPlaying);
+            events.OnNext(Event.Create(EventTypes.Player.StartPlaying));
             subscription = Observable
                 .Generate(currentPosition, i => i < currentTrack.Duration, i => i + OneSecond, i => i, i => OneSecond)
-                .Finally(() => events.OnNext(PlayerEvent.PlaybackComplete))
+                .Finally(() => events.OnNext(Event.Create(EventTypes.Player.PlaybackComplete)))
                 .Subscribe(
                     pos =>
                     {
                         currentPosition = pos;
-                        events.OnNext(PlayerEvent.PositionChange);
+                        events.OnNext(Event.Create(EventTypes.Player.PositionChange));
                     });
         }
 
@@ -63,7 +64,7 @@ namespace kookbox.mock
             subscription?.Dispose();
             subscription = null;
 
-            events.OnNext(PlayerEvent.StopPlaying);
+            events.OnNext(Event.Create(EventTypes.Player.StopPlaying));
             isPlaying = false;
         }
 
@@ -76,7 +77,7 @@ namespace kookbox.mock
 
         public Option<ITrack> CurrentTrack => Option.Create(currentTrack);
         public bool CanSeek => false;
-        public IObservable<PlayerEvent> Events => events;
+        public IObservable<Event> Events => events;
         public TimeSpan CurrentPosition => currentPosition;
         public bool IsPlaying => isPlaying;
         public string Id => id;

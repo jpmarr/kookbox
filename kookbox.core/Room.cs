@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using kookbox.core.Interfaces;
+using kookbox.core.Interfaces.Events;
 using kookbox.core.Interfaces.Internal;
 using kookbox.core.Interfaces.Serialisation;
 using kookbox.core.Messaging;
@@ -20,6 +21,7 @@ namespace kookbox.core
         private IDisposable playerEventSubscription;
         private Option<IQueuedTrack> currentTrack = Option<IQueuedTrack>.None();
         private readonly Dictionary<IMusicSource, IPlayer> players = new Dictionary<IMusicSource, IPlayer>();
+        private readonly Subject<Event> events = new Subject<Event>();
 
         private Room(IServerController server)
         {
@@ -182,17 +184,17 @@ namespace kookbox.core
             playerEventSubscription = player.Events.Subscribe(async evt => await HandlePlayerEventAsync(evt));
         }
 
-        private async Task HandlePlayerEventAsync(PlayerEvent playerEvent)
+        private async Task HandlePlayerEventAsync(Event playerEvent)
         {
-            switch (playerEvent)
+            switch (playerEvent.EventType)
             {
-                case PlayerEvent.StartPlaying:
+                case EventTypes.Player.StartPlaying:
                     CurrentTrack.IfHasValue(HandlePlaybackStarted);
                     break;
-                case PlayerEvent.StopPlaying:
+                case EventTypes.Player.StopPlaying:
                     Console.WriteLine("Stop playing");
                     break;
-                case PlayerEvent.PositionChange:
+                case EventTypes.Player.PositionChange:
                     CurrentTrack.IfHasValue(async t =>
                     {
                         var player = await GetPlayerForSourceAsync(t.Track.Source);
@@ -200,7 +202,7 @@ namespace kookbox.core
                     });
                     
                     break;
-                case PlayerEvent.PlaybackComplete:
+                case EventTypes.Player.PlaybackComplete:
                     CurrentTrack.IfHasValue(t => Console.WriteLine($"Completed Track: \"{t.Track.Title}"));
                     await CueNextTrackAsync();
                     await ((IRoomController)this).PlayAsync();

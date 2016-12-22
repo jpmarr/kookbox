@@ -1,4 +1,5 @@
 ﻿using System;
+using kookbox.core.Interfaces.Events;
 
 namespace kookbox.core.Interfaces
 {
@@ -14,14 +15,6 @@ namespace kookbox.core.Interfaces
         bool IsPlaying { get; }
         bool CanSeek { get; }
 
-        IObservable<PlayerEvent> Events { get; }
-    }
-
-    public enum PlayerEvent
-    {
-        StartPlaying,
-        StopPlaying,
-        PositionChange,
-        PlaybackComplete
+        IObservable<Event> Events { get; }
     }
 }
